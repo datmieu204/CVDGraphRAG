@@ -6,7 +6,7 @@ from functools import partial
 from typing import Type, cast
 
 
-from ._llm import gpt_4o_complete, gpt_4o_mini_complete, openai_embedding
+from ._llm import gemini_1_5_flash_complete, bge_m3_embedding
 from ._op import (
     chunking_by_token_size,
     extract_entities,
@@ -36,7 +36,7 @@ class GraphRAG:
     # text chunking
     chunk_token_size: int = 1200
     chunk_overlap_token_size: int = 100
-    tiktoken_model_name: str = "gpt-4o"
+    tiktoken_model_name: str = "gpt-4o"  # Keep for tokenization compatibility
 
     # entity extraction
     entity_extract_max_gleaning: int = 1
@@ -51,7 +51,7 @@ class GraphRAG:
     node_embedding_algorithm: str = "node2vec"
     node2vec_params: dict = field(
         default_factory=lambda: {
-            "dimensions": 1536,
+            "dimensions": 64,  # Changed to match bge-small-en-v1.5 dimension
             "num_walks": 10,
             "walk_length": 40,
             "num_walks": 10,
@@ -67,15 +67,15 @@ class GraphRAG:
     )
 
     # text embedding
-    embedding_func: EmbeddingFunc = field(default_factory=lambda: openai_embedding)
+    embedding_func: EmbeddingFunc = field(default_factory=lambda: bge_m3_embedding)
     embedding_batch_num: int = 32
     embedding_func_max_async: int = 16
 
-    # LLM
-    best_model_func: callable = gpt_4o_complete
+    # LLM - Changed to Gemini
+    best_model_func: callable = gemini_1_5_flash_complete
     best_model_max_token_size: int = 32768
     best_model_max_async: int = 16
-    cheap_model_func: callable = gpt_4o_mini_complete
+    cheap_model_func: callable = gemini_1_5_flash_complete
     cheap_model_max_token_size: int = 32768
     cheap_model_max_async: int = 16
 

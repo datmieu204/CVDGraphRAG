@@ -1,11 +1,11 @@
-import openai
-from openai import OpenAI
+import time
 from concurrent.futures import ThreadPoolExecutor
 import tiktoken
 import os
+from google import genai
+from dotenv import load_dotenv
 
-# Add your own OpenAI API key
-openai_api_key = os.getenv("OPENAI_API_KEY")
+load_dotenv()
 
 sum_prompt = """
 Generate a structured summary from the provided medical source (report, paper, or book), strictly adhering to the following categories. The summary should list key information under each category in a concise format: 'CATEGORY_NAME: Key information'. No additional explanations or detailed descriptions are necessary unless directly related to the categories:
@@ -32,23 +32,26 @@ SUBSTANCE_ABUSE: Note any substance abuse mentioned.
 Each category should be addressed only if relevant to the content of the medical source. Ensure the summary is clear and direct, suitable for quick reference.
 """
 
-def call_openai_api(chunk):
-    client = OpenAI(
-        api_key=os.getenv("OPENAI_API_KEY"),
-        base_url=os.getenv("OPENAI_API_BASE_URL")
-    )
-    response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
-        messages=[
-            {"role": "system", "content": sum_prompt},
-            {"role": "user", "content": f" {chunk}"},
-        ],
-        max_tokens=500,
-        n=1,
-        stop=None,
-        temperature=0.5,
-    )
-    return response.choices[0].message.content
+# Note: summerize.py is used by utils.py, run.py, and qna_evaluator.py
+# These are for query/evaluation, not import. They can use shared manager safely.
+# But for consistency, we'll update to support optional client parameter
+
+def call_openai_api(chunk, client=None):
+    """Call Gemini API with optional dedicated client
+    
+    Args:
+        chunk: Text to summarize
+        client: Optional DedicatedKeyClient. If None, creates temporary client.
+    """
+    from dedicated_key_manager import create_dedicated_client
+    
+    if client is None:
+        # For standalone usage (utils.py, run.py, qna_evaluator.py)
+        # Create a temporary dedicated client
+        client = create_dedicated_client(task_id="summerize_standalone")
+    
+    full_prompt = f"{sum_prompt}\n\n{chunk}"
+    return client.call_with_retry(full_prompt, model="models/gemini-2.5-flash-lite")
 
 def split_into_chunks(text, tokens=500):
     encoding = tiktoken.encoding_for_model('gpt-4-1106-preview')
@@ -58,12 +61,21 @@ def split_into_chunks(text, tokens=500):
         chunks.append(' '.join(encoding.decode(words[i:i + tokens])))
     return chunks   
 
-def process_chunks(content):
+def process_chunks(content, client=None):
+    """Process content chunks with optional dedicated client
+    
+    Args:
+        content: Text to process
+        client: Optional DedicatedKeyClient. If None, creates temporary client.
+    """
     chunks = split_into_chunks(content)
 
-    # Processes chunks in parallel
+    # Processes chunks in parallel, passing client to each call
+    from functools import partial
+    call_with_client = partial(call_openai_api, client=client)
+    
     with ThreadPoolExecutor() as executor:
-        responses = list(executor.map(call_openai_api, chunks))
+        responses = list(executor.map(call_with_client, chunks))
     # print(responses)
     return responses
 

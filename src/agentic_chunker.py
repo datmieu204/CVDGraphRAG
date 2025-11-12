@@ -1,16 +1,20 @@
 from langchain_core.prompts import ChatPromptTemplate
 import uuid
-from langchain.chat_models import ChatOpenAI
 import os
+import time
 from typing import Optional
 from pydantic import BaseModel
-from langchain.chains import create_extraction_chain_pydantic
 from dotenv import load_dotenv
+from google import genai
 
 load_dotenv()
 
 class AgenticChunker:
-    def __init__(self, openai_api_key=None):
+    def __init__(self, client=None):
+        """
+        Args:
+            client: DedicatedKeyClient instance (passed from parent)
+        """
         self.chunks = {}
         self.id_truncate_limit = 5
 
@@ -18,13 +22,19 @@ class AgenticChunker:
         self.generate_new_metadata_ind = True
         self.print_logging = True
 
-        if openai_api_key is None:
-            openai_api_key = os.getenv("OPENAI_API_KEY")
-
-        if openai_api_key is None:
-            raise ValueError("API key is not provided and not found in environment variables")
-
-        self.llm = ChatOpenAI(model='gpt-4-1106-preview', openai_api_key=openai_api_key, temperature=0)
+        # Use dedicated client passed from parent
+        self.client = client
+        if self.client is None:
+            raise ValueError("AgenticChunker requires a DedicatedKeyClient instance")
+        
+        if self.print_logging:
+            print(f"🔑 AgenticChunker using dedicated client")
+    
+    def _call_gemini_with_retry(self, prompt, max_retries=3):
+        """Call Gemini API using dedicated client"""
+        if self.client is None:
+            raise ValueError("No client available")
+        return self.client.call_with_retry(prompt, model="models/gemini-2.5-flash-lite")
 
     def add_propositions(self, propositions):
         for proposition in propositions:
@@ -69,149 +79,110 @@ class AgenticChunker:
         """
         If you add a new proposition to a chunk, you may want to update the summary or else they could get stale
         """
-        PROMPT = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    """
-                    You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
-                    A new proposition was just added to one of your chunks, you should generate a very brief 1-sentence summary which will inform viewers what a chunk group is about.
+        system_prompt = """
+        You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
+        A new proposition was just added to one of your chunks, you should generate a very brief 1-sentence summary which will inform viewers what a chunk group is about.
 
-                    A good summary will say what the chunk is about, and give any clarifying instructions on what to add to the chunk.
+        A good summary will say what the chunk is about, and give any clarifying instructions on what to add to the chunk.
 
-                    You will be given a group of propositions which are in the chunk and the chunks current summary.
+        You will be given a group of propositions which are in the chunk and the chunks current summary.
 
-                    Your summaries should anticipate generalization. If you get a proposition about apples, generalize it to food.
-                    Or month, generalize it to "date and times".
+        Your summaries should anticipate generalization. If you get a proposition about apples, generalize it to food.
+        Or month, generalize it to "date and times".
 
-                    Example:
-                    Input: Proposition: Greg likes to eat pizza
-                    Output: This chunk contains information about the types of food Greg likes to eat.
+        Example:
+        Input: Proposition: Greg likes to eat pizza
+        Output: This chunk contains information about the types of food Greg likes to eat.
 
-                    Only respond with the chunk new summary, nothing else.
-                    """,
-                ),
-                ("user", "Chunk's propositions:\n{proposition}\n\nCurrent chunk summary:\n{current_summary}"),
-            ]
-        )
-
-        runnable = PROMPT | self.llm
-
-        new_chunk_summary = runnable.invoke({
-            "proposition": "\n".join(chunk['propositions']),
-            "current_summary" : chunk['summary']
-        }).content
-
+        Only respond with the chunk new summary, nothing else.
+        """
+        
+        user_prompt = f"Chunk's propositions:\n{chr(10).join(chunk['propositions'])}\n\nCurrent chunk summary:\n{chunk['summary']}"
+        
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
+        
+        new_chunk_summary = self._call_gemini_with_retry(full_prompt)
         return new_chunk_summary
     
     def _update_chunk_title(self, chunk):
         """
         If you add a new proposition to a chunk, you may want to update the title or else it can get stale
         """
-        PROMPT = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    """
-                    You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
-                    A new proposition was just added to one of your chunks, you should generate a very brief updated chunk title which will inform viewers what a chunk group is about.
+        system_prompt = """
+        You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
+        A new proposition was just added to one of your chunks, you should generate a very brief updated chunk title which will inform viewers what a chunk group is about.
 
-                    A good title will say what the chunk is about.
+        A good title will say what the chunk is about.
 
-                    You will be given a group of propositions which are in the chunk, chunk summary and the chunk title.
+        You will be given a group of propositions which are in the chunk, chunk summary and the chunk title.
 
-                    Your title should anticipate generalization. If you get a proposition about apples, generalize it to food.
-                    Or month, generalize it to "date and times".
+        Your title should anticipate generalization. If you get a proposition about apples, generalize it to food.
+        Or month, generalize it to "date and times".
 
-                    Example:
-                    Input: Summary: This chunk is about dates and times that the author talks about
-                    Output: Date & Times
+        Example:
+        Input: Summary: This chunk is about dates and times that the author talks about
+        Output: Date & Times
 
-                    Only respond with the new chunk title, nothing else.
-                    """,
-                ),
-                ("user", "Chunk's propositions:\n{proposition}\n\nChunk summary:\n{current_summary}\n\nCurrent chunk title:\n{current_title}"),
-            ]
-        )
-
-        runnable = PROMPT | self.llm
-
-        updated_chunk_title = runnable.invoke({
-            "proposition": "\n".join(chunk['propositions']),
-            "current_summary" : chunk['summary'],
-            "current_title" : chunk['title']
-        }).content
-
+        Only respond with the new chunk title, nothing else.
+        """
+        
+        user_prompt = f"Chunk's propositions:\n{chr(10).join(chunk['propositions'])}\n\nChunk summary:\n{chunk['summary']}\n\nCurrent chunk title:\n{chunk['title']}"
+        
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
+        
+        updated_chunk_title = self._call_gemini_with_retry(full_prompt)
         return updated_chunk_title
 
     def _get_new_chunk_summary(self, proposition):
-        PROMPT = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    """
-                    You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
-                    You should generate a very brief 1-sentence summary which will inform viewers what a chunk group is about.
+        system_prompt = """
+        You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
+        You should generate a very brief 1-sentence summary which will inform viewers what a chunk group is about.
 
-                    A good summary will say what the chunk is about, and give any clarifying instructions on what to add to the chunk.
+        A good summary will say what the chunk is about, and give any clarifying instructions on what to add to the chunk.
 
-                    You will be given a proposition which will go into a new chunk. This new chunk needs a summary.
+        You will be given a proposition which will go into a new chunk. This new chunk needs a summary.
 
-                    Your summaries should anticipate generalization. If you get a proposition about apples, generalize it to food.
-                    Or month, generalize it to "date and times".
+        Your summaries should anticipate generalization. If you get a proposition about apples, generalize it to food.
+        Or month, generalize it to "date and times".
 
-                    Example:
-                    Input: Proposition: Greg likes to eat pizza
-                    Output: This chunk contains information about the types of food Greg likes to eat.
+        Example:
+        Input: Proposition: Greg likes to eat pizza
+        Output: This chunk contains information about the types of food Greg likes to eat.
 
-                    Only respond with the new chunk summary, nothing else.
-                    """,
-                ),
-                ("user", "Determine the summary of the new chunk that this proposition will go into:\n{proposition}"),
-            ]
-        )
-
-        runnable = PROMPT | self.llm
-
-        new_chunk_summary = runnable.invoke({
-            "proposition": proposition
-        }).content
-
+        Only respond with the new chunk summary, nothing else.
+        """
+        
+        user_prompt = f"Determine the summary of the new chunk that this proposition will go into:\n{proposition}"
+        
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
+        
+        new_chunk_summary = self._call_gemini_with_retry(full_prompt)
         return new_chunk_summary
     
     def _get_new_chunk_title(self, summary):
-        PROMPT = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    """
-                    You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
-                    You should generate a very brief few word chunk title which will inform viewers what a chunk group is about.
+        system_prompt = """
+        You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
+        You should generate a very brief few word chunk title which will inform viewers what a chunk group is about.
 
-                    A good chunk title is brief but encompasses what the chunk is about
+        A good chunk title is brief but encompasses what the chunk is about
 
-                    You will be given a summary of a chunk which needs a title
+        You will be given a summary of a chunk which needs a title
 
-                    Your titles should anticipate generalization. If you get a proposition about apples, generalize it to food.
-                    Or month, generalize it to "date and times".
+        Your titles should anticipate generalization. If you get a proposition about apples, generalize it to food.
+        Or month, generalize it to "date and times".
 
-                    Example:
-                    Input: Summary: This chunk is about dates and times that the author talks about
-                    Output: Date & Times
+        Example:
+        Input: Summary: This chunk is about dates and times that the author talks about
+        Output: Date & Times
 
-                    Only respond with the new chunk title, nothing else.
-                    """,
-                ),
-                ("user", "Determine the title of the chunk that this summary belongs to:\n{summary}"),
-            ]
-        )
-
-        runnable = PROMPT | self.llm
-
-        new_chunk_title = runnable.invoke({
-            "summary": summary
-        }).content
-
+        Only respond with the new chunk title, nothing else.
+        """
+        
+        user_prompt = f"Determine the title of the chunk that this summary belongs to:\n{summary}"
+        
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
+        
+        new_chunk_title = self._call_gemini_with_retry(full_prompt)
         return new_chunk_title
 
 
@@ -247,62 +218,48 @@ class AgenticChunker:
     def _find_relevant_chunk(self, proposition):
         current_chunk_outline = self.get_chunk_outline()
 
-        PROMPT = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    """
-                    Determine whether or not the "Proposition" should belong to any of the existing chunks.
+        system_prompt = """
+        Determine whether or not the "Proposition" should belong to any of the existing chunks.
 
-                    A proposition should belong to a chunk of their meaning, direction, or intention are similar.
-                    The goal is to group similar propositions and chunks.
+        A proposition should belong to a chunk of their meaning, direction, or intention are similar.
+        The goal is to group similar propositions and chunks.
 
-                    If you think a proposition should be joined with a chunk, return the chunk id.
-                    If you do not think an item should be joined with an existing chunk, just return "No chunks"
+        If you think a proposition should be joined with a chunk, return the chunk id.
+        If you do not think an item should be joined with an existing chunk, just return "No chunks"
 
-                    Example:
-                    Input:
-                        - Proposition: "Greg really likes hamburgers"
-                        - Current Chunks:
-                            - Chunk ID: 2n4l3d
-                            - Chunk Name: Places in San Francisco
-                            - Chunk Summary: Overview of the things to do with San Francisco Places
+        Example:
+        Input:
+            - Proposition: "Greg really likes hamburgers"
+            - Current Chunks:
+                - Chunk ID: 2n4l3d
+                - Chunk Name: Places in San Francisco
+                - Chunk Summary: Overview of the things to do with San Francisco Places
 
-                            - Chunk ID: 93833k
-                            - Chunk Name: Food Greg likes
-                            - Chunk Summary: Lists of the food and dishes that Greg likes
-                    Output: 93833k
-                    """,
-                ),
-                ("user", "Current Chunks:\n--Start of current chunks--\n{current_chunk_outline}\n--End of current chunks--"),
-                ("user", "Determine if the following statement should belong to one of the chunks outlined:\n{proposition}"),
-            ]
-        )
+                - Chunk ID: 93833k
+                - Chunk Name: Food Greg likes
+                - Chunk Summary: Lists of the food and dishes that Greg likes
+        Output: 93833k
+        """
+        
+        user_prompt = f"Current Chunks:\n--Start of current chunks--\n{current_chunk_outline}\n--End of current chunks--\n\nDetermine if the following statement should belong to one of the chunks outlined:\n{proposition}"
+        
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
+        
+        chunk_found = self._call_gemini_with_retry(full_prompt)
 
-        runnable = PROMPT | self.llm
-
-        chunk_found = runnable.invoke({
-            "proposition": proposition,
-            "current_chunk_outline": current_chunk_outline
-        }).content
-
-        # Pydantic data class
-        class ChunkID(BaseModel):
-            """Extracting the chunk id"""
-            chunk_id: Optional[str]
-            
-        # Extraction to catch-all LLM responses. This is a bandaid
-        extraction_chain = create_extraction_chain_pydantic(pydantic_schema=ChunkID, llm=self.llm)
-        extraction_found = extraction_chain.run(chunk_found)
-        if extraction_found:
-            chunk_found = extraction_found[0].chunk_id
-
-        # If you got a response that isn't the chunk id limit, chances are it's a bad response or it found nothing
-        # So return nothing
-        if len(chunk_found) != self.id_truncate_limit:
-            return None
-
-        return chunk_found
+        # Try to extract chunk id from response
+        # Look for a string that matches the id length
+        import re
+        id_pattern = r'\b[a-zA-Z0-9]{' + str(self.id_truncate_limit) + r'}\b'
+        match = re.search(id_pattern, chunk_found)
+        
+        if match:
+            chunk_found = match.group(0)
+            # Verify this chunk id exists
+            if chunk_found in self.chunks:
+                return chunk_found
+        
+        return None
     
     def get_chunks(self, get_type='dict'):
         """

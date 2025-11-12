@@ -6,7 +6,7 @@ from camel.loaders import UnstructuredIO
 from dataloader import load_high
 import argparse
 from data_chunk import run_chunk
-from creat_graph import creat_metagraph
+from creat_graph_with_description import creat_metagraph_with_description
 from summerize import process_chunks
 from retrieve import seq_ret
 from utils import *
@@ -59,7 +59,7 @@ else:
                 file_path = os.path.join(args.data_path, file_name)
                 content = load_high(file_path)
                 gid = str_uuid()
-                n4j = creat_metagraph(args, content, gid, n4j)
+                n4j = creat_metagraph_with_description(args, content, gid, n4j)
 
                 if args.trinity:
                     link_context(n4j, args.trinity_gid1)
@@ -70,5 +70,11 @@ else:
         question = load_high("./prompt.txt")
         sum = process_chunks(question)
         gid = seq_ret(n4j, sum)
-        response = get_response(n4j, gid, question)
-        print(response)
+        
+        if gid is None:
+            print("\n❌ Cannot perform inference - database is empty or no valid results found.")
+            print("💡 Run the following command first to build the graph:")
+            print("   python run.py -dataset mimic_ex -data_path ../data/mimic_ex -construct_graph")
+        else:
+            response = get_response(n4j, gid, question)
+            print(response)

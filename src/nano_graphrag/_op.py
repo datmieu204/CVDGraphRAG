@@ -3,9 +3,7 @@ import json
 import re
 from collections import Counter, defaultdict
 
-from openai import AsyncOpenAI
-
-from ._llm import gpt_4o_complete
+from ._llm import gemini_1_5_flash_complete
 from ._utils import (
     logger,
     clean_str,

@@ -6,6 +6,8 @@ dataset_test/
 test*/
 .dockerignore
 app.sh
+temp/
+qna/
 
 ### Python template
 # Byte-compiled / optimized / DLL files
@@ -24,3 +26,6 @@ venv/
 # Logs
 logs/
 *.log
+.hf_cache/
+.vscode/
+

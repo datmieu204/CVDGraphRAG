@@ -1,4 +1,4 @@
-from langchain_community.chat_models import ChatOpenAI
+import time
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel
@@ -7,40 +7,30 @@ import os
 from dataloader import load_high
 from agentic_chunker import AgenticChunker
 from typing import List
+from google import genai
+
+from logger_ import get_logger
+
+logger = get_logger("data_chunk", log_file="logs/data_chunk.log")
 
 # Định nghĩa schema đầu ra
 class Sentences(BaseModel):
     sentences: List[str]
 
 
-def run_chunk(essay):
-    # Lấy prompt template từ LangChain Hub
-    obj = hub.pull("wfh/proposal-indexing")
-
-    # Khởi tạo LLM
-    llm = ChatOpenAI(
-        model="gpt-4o-mini",  # hoặc "gpt-4-1106-preview"
-        temperature=0,
-        openai_api_key=os.getenv("OPENAI_API_KEY")
-    )
-
-    # Parser cho đầu ra JSON theo schema
-    parser = PydanticOutputParser(pydantic_object=Sentences)
-
-    # Tạo prompt mẫu
-    prompt = ChatPromptTemplate.from_template(
-        """
-        Extract main propositions from the following text. 
-        Return strictly in JSON format matching this schema:
-        {format_instructions}
-
-        Text:
-        {text}
-        """
-    ).partial(format_instructions=parser.get_format_instructions())
-
-    # Gộp pipeline
-    chain = prompt | llm | parser
+def run_chunk(essay, client=None):
+    """
+    Run chunking with optional dedicated client
+    
+    Args:
+        essay: Text to chunk
+        client: DedicatedKeyClient instance (if None, will create one)
+    """
+    # If no client provided, create one (for backwards compatibility)
+    if client is None:
+        from dedicated_key_manager import create_dedicated_client
+        client = create_dedicated_client(task_id="data_chunk_fallback")
+        logger.warning("⚠️  No client provided, created fallback client")
 
     # Xử lý từng đoạn
     paragraphs = essay.split("\n\n")
@@ -48,14 +38,42 @@ def run_chunk(essay):
 
     for i, para in enumerate(paragraphs):
         try:
-            result = chain.invoke({"text": para})
-            essay_propositions.extend(result.sentences)
-            print(f"✅ Done paragraph {i+1}")
-        except Exception as e:
-            print(f"⚠️ Skipped paragraph {i+1}: {e}")
+            # Create prompt for Gemini
+            prompt = f"""
+            Extract main propositions from the following text. 
+            Return strictly in JSON format with a "sentences" field containing an array of strings.
 
-    # Chunk lại
-    ac = AgenticChunker()
+            Text:
+            {para}
+            
+            Example format:
+            {{"sentences": ["proposition 1", "proposition 2", ...]}}
+            """
+            
+            # Call Gemini with dedicated client
+            response_text = client.call_with_retry(prompt, model="models/gemini-2.5-flash-lite")
+            
+            # Try to parse JSON
+            import json
+            try:
+                result = json.loads(response_text)
+                if isinstance(result, dict) and "sentences" in result:
+                    essay_propositions.extend(result["sentences"])
+                else:
+                    # If not in expected format, split by newlines
+                    sentences = [s.strip() for s in response_text.split('\n') if s.strip()]
+                    essay_propositions.extend(sentences)
+            except json.JSONDecodeError:
+                # If JSON parsing fails, split by newlines
+                sentences = [s.strip() for s in response_text.split('\n') if s.strip()]
+                essay_propositions.extend(sentences)
+
+            logger.info(f"✅ Done paragraph {i+1}")
+        except Exception as e:
+            logger.warning(f"⚠️ Skipped paragraph {i+1}: {e}")
+
+    # Chunk lại - pass client to AgenticChunker
+    ac = AgenticChunker(client=client)
     ac.add_propositions(essay_propositions)
     ac.pretty_print_chunks()
     chunks = ac.get_chunks(get_type="list_of_strings")
