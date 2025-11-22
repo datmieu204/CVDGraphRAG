@@ -47,7 +47,12 @@ def call_openai_api(chunk, client=None):
         raise ValueError("Client must be provided to call_openai_api()")
     
     full_prompt = f"{sum_prompt}\n\n{chunk}"
-    return client.call_with_retry(full_prompt, model="models/gemini-2.5-flash-lite")
+    # Use dedicated client's call_with_retry (already has model parameter)
+    return client.call_with_retry(
+        full_prompt, 
+        model="models/gemini-2.5-flash-lite",
+        max_retries=3
+    )
 
 def split_into_chunks(text, tokens=500):
     encoding = tiktoken.encoding_for_model('gpt-4-1106-preview')

@@ -1,4 +1,5 @@
 from utils import *
+from dedicated_key_manager import create_dedicated_client
 
 sys_p = """
 Assess the similarity of the two provided summaries and return a rating from these options: 'very similar', 'similar', 'general', 'not similar', 'totally not similar'. Provide only the rating.
@@ -8,7 +9,18 @@ from logger_ import get_logger
 
 logger = get_logger("retrieve", log_file="logs/retrieve.log")
 
-def seq_ret(n4j, sumq):
+def seq_ret(n4j, sumq, client=None):
+    """
+    Retrieve most similar subgraph based on summary comparison
+    
+    Args:
+        n4j: Neo4j connection
+        sumq: Query summary
+        client: Optional DedicatedKeyClient. If None, creates temporary one.
+    """
+    # Create client if not provided
+    if client is None:
+        client = create_dedicated_client(task_id="seq_ret_standalone")
     rating_list = []
     sumk = []
     gids = []
@@ -30,7 +42,10 @@ def seq_ret(n4j, sumq):
     
     for sk in sumk:
         sk = sk[0]
-        rate = call_llm(sys_p, "The two summaries for comparison are: \n Summary 1: " + sk + "\n Summary 2: " + sumq[0])
+        # Use dedicated client instead of call_llm
+        user_prompt = "The two summaries for comparison are: \n Summary 1: " + sk + "\n Summary 2: " + sumq[0]
+        full_prompt = f"{sys_p}\n\n{user_prompt}"
+        rate = client.call_with_retry(full_prompt, model="models/gemini-2.5-flash-lite", max_retries=3)
         if "totally not similar" in rate:
             rating_list.append(0)
         elif "not similar" in rate:

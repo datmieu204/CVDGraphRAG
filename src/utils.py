@@ -117,221 +117,29 @@ def add_sum(n4j, content, gid, client=None):
 
     return s
 
-# Global API key rotator for call_llm
-_gemini_rotator = None
 
-def _get_gemini_rotator():
-    """Get or create global Gemini API key rotator"""
-    global _gemini_rotator
-    if _gemini_rotator is None:
-        _gemini_rotator = GeminiClientRotator()
-    return _gemini_rotator
-
-
-class GeminiClientRotator:
-    """Rotator class for multiple Gemini API keys with blacklist support for exhausted keys"""
-    def __init__(self, print_logging=True):
-        self.api_keys = []
-        # Dynamically load all available API keys
-        i = 1
-        while True:
-            key = os.getenv(f"GEMINI_API_KEY_{i}")
-            if key:
-                self.api_keys.append(key)
-                i += 1
-            else:
-                break
-        
-        # Filter out None values
-        self.api_keys = [key for key in self.api_keys if key]
-        self.current_key_index = 0
-        self.disabled_key_indices = set()  # Track disabled keys
-        self.key_429_count = {}  # Track 429 errors per key
-        self.print_logging = print_logging
-        
-        # Initialize 429 counters
-        for idx in range(len(self.api_keys)):
-            self.key_429_count[idx] = 0
-        
-        if not self.api_keys:
-            raise ValueError("No GEMINI_API_KEY found in environment variables")
-        
-        if self.print_logging:
-            print(f"🔑 Loaded {len(self.api_keys)} Gemini API keys")
-        
-        self.genai_client = genai.Client(api_key=self.api_keys[0])
+def call_llm(sys, user, client=None):
+    """Call Gemini-2.5-flash-lite LLM using dedicated key manager
     
-    def _get_active_keys_count(self):
-        """Get number of keys still available (not disabled)"""
-        return len(self.api_keys) - len(self.disabled_key_indices)
+    Args:
+        sys: System prompt
+        user: User prompt  
+        client: Optional DedicatedKeyClient. If None, creates temporary one.
+    """
+    from dedicated_key_manager import create_dedicated_client
     
-    def reset(self):
-        """Reset all disabled keys and 429 counters"""
-        self.disabled_key_indices.clear()
-        self.key_429_count = {i: 0 for i in range(len(self.api_keys))}
-        self.current_key_index = 0
-        self.genai_client = genai.Client(api_key=self.api_keys[0])
-        if self.print_logging:
-            print(f"🔄 Reset all keys. Active: {self._get_active_keys_count()}/{len(self.api_keys)}")
-    
-    def _disable_current_key(self):
-        """Mark current key as disabled (exhausted) - only when truly out of quota"""
-        if self.current_key_index not in self.disabled_key_indices:
-            self.disabled_key_indices.add(self.current_key_index)
-            if self.print_logging:
-                print(f"🚫 Key #{self.current_key_index + 1} PERMANENTLY disabled (quota exhausted). "
-                      f"Active: {self._get_active_keys_count()}/{len(self.api_keys)}")
-    
-    def _handle_429_error(self):
-        """
-        Smart 429 handling:
-        - First 429: rotate only (might be temporary rate limit)
-        - Second+ 429: disable permanently (truly exhausted)
-        """
-        self.key_429_count[self.current_key_index] = self.key_429_count.get(self.current_key_index, 0) + 1
-        
-        if self.key_429_count[self.current_key_index] == 1:
-            # First 429 - just rotate
-            if self.print_logging:
-                print(f"⚠️ Key #{self.current_key_index + 1} hit rate limit (first time). Rotating to next key...")
-            return self.rotate_key()
-        else:
-            # Second+ 429 - disable permanently
-            if self.print_logging:
-                print(f"⚠️ Key #{self.current_key_index + 1} hit rate limit again "
-                      f"(#{self.key_429_count[self.current_key_index]} times). Disabling permanently...")
-            self._disable_current_key()
-            return self.rotate_key()
-    
-    def rotate_key(self):
-        """Rotate to next available API key, skipping disabled ones"""
-        initial_index = self.current_key_index
-        attempts = 0
-        max_attempts = len(self.api_keys)
-        
-        while attempts < max_attempts:
-            self.current_key_index = (self.current_key_index + 1) % len(self.api_keys)
-            attempts += 1
-            
-            if self.current_key_index not in self.disabled_key_indices:
-                self.genai_client = genai.Client(api_key=self.api_keys[self.current_key_index])
-                if self.print_logging:
-                    print(f"🔄 Rotated to key #{self.current_key_index + 1}/{len(self.api_keys)} (Active: {self._get_active_keys_count()})")
-                return True
-        
-        if self.print_logging:
-            print(f"❌ All {len(self.api_keys)} keys disabled")
-        return False
-    
-    def call_with_retry(self, prompt, max_output_tokens=500, temperature=0.5, max_retries=None):
-        """
-        Call Gemini API with automatic retry and key rotation
-        FIXED: Rotate key BEFORE each request để phân phối đều tải
-        """
-        if max_retries is None:
-            max_retries = self._get_active_keys_count() * 2
-        
-        if self._get_active_keys_count() == 0:
-            raise Exception(f"All {len(self.api_keys)} API keys disabled. No active keys.")
-        
-        for attempt in range(max_retries):
-            try:
-                # CRITICAL FIX: Rotate to next available key BEFORE each request
-                # This ensures true round-robin distribution
-                if attempt > 0:  # Don't rotate on first attempt
-                    if not self.rotate_key():
-                        raise Exception(f"All {len(self.api_keys)} API keys disabled.")
-                
-                # Rate limiting delay
-                time.sleep(1.0)
-                
-                response_obj = self.genai_client.models.generate_content(
-                    model="models/gemini-2.5-flash-lite",
-                    contents=prompt,
-                    config={
-                        "max_output_tokens": max_output_tokens,
-                        "temperature": temperature,
-                    }
-                )
-                
-                # Success - reset 429 counter for this key
-                if self.current_key_index in self.key_429_count:
-                    self.key_429_count[self.current_key_index] = 0
-                
-                # Rotate to next key after successful request (round-robin)
-                self.rotate_key()
-                
-                # Safe response handling
-                if response_obj and hasattr(response_obj, "text") and response_obj.text:
-                    return response_obj.text.strip()
-                elif response_obj and hasattr(response_obj, "candidates") and response_obj.candidates:
-                    # Check if content was blocked by safety filters
-                    candidate = response_obj.candidates[0]
-                    if hasattr(candidate, "finish_reason"):
-                        if self.print_logging:
-                            print(f"⚠️ Response blocked by safety filters: {candidate.finish_reason}")
-                        return ""
-                else:
-                    if self.print_logging:
-                        print(f"⚠️ Empty response from key #{self.current_key_index + 1}")
-                    return ""
-                    
-            except Exception as e:
-                error_str = str(e)
-                
-                # 1. Rate limit / Quota exhausted - mark and continue
-                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
-                    self.key_429_count[self.current_key_index] = self.key_429_count.get(self.current_key_index, 0) + 1
-                    
-                    if self.key_429_count[self.current_key_index] >= 2:
-                        # Second+ 429 on same key = truly exhausted
-                        if self.print_logging:
-                            print(f"⚠️ Key #{self.current_key_index + 1} hit 429 multiple times. Disabling...")
-                        self._disable_current_key()
-                    else:
-                        # First 429 = might be temporary
-                        if self.print_logging:
-                            print(f"⚠️ Key #{self.current_key_index + 1} hit 429 (first time). Marked.")
-                    
-                    # Continue to next iteration (will rotate at start)
-                    time.sleep(2.0)
-                    continue
-                
-                # 2. Server errors (500, 503) - retry without disabling key
-                elif "500" in error_str or "503" in error_str or "INTERNAL" in error_str:
-                    if self.print_logging:
-                        print(f"⚠️ Server error on key #{self.current_key_index + 1}: {error_str[:100]}")
-                        print(f"   Retrying in 5 seconds... (attempt {attempt + 1}/{max_retries})")
-                    time.sleep(5.0)
-                    continue
-                
-                # 3. Network errors - retry
-                elif "disconnected" in error_str.lower() or "connection" in error_str.lower():
-                    if self.print_logging:
-                        print(f"⚠️ Network error: {error_str[:100]}")
-                        print(f"   Retrying in 3 seconds... (attempt {attempt + 1}/{max_retries})")
-                    time.sleep(3.0)
-                    continue
-                
-                # 4. Other errors - raise immediately (don't rotate)
-                else:
-                    if self.print_logging:
-                        print(f"❌ Unexpected error on key #{self.current_key_index + 1}: {error_str}")
-                        print(f"   This is likely a code bug or API issue, not a quota problem.")
-                    raise
-        
-        # Max retries exceeded
-        raise Exception(f"Max retries ({max_retries}) exceeded. Last active keys: {self._get_active_keys_count()}")
-
-
-def call_llm(sys, user):
-    """Call Gemini-2.5-flash-lite LLM with API key rotation"""
-    rotator = _get_gemini_rotator()
+    # Create client if not provided
+    if client is None:
+        client = create_dedicated_client(task_id="call_llm_standalone")
     
     # Combine system and user prompts for Gemini
     full_prompt = f"{sys}\n\n{user}"
     
-    return rotator.call_with_retry(full_prompt, max_output_tokens=500, temperature=0.5)
+    return client.call_with_retry(
+        full_prompt, 
+        model="models/gemini-2.5-flash-lite",
+        max_retries=3
+    )
 
 def find_index_of_largest(nums):
     # Handle empty list
@@ -347,13 +155,27 @@ def find_index_of_largest(nums):
     
     return largest_original_index
 
-def get_response(n4j, gid, query):
+def get_response(n4j, gid, query, client=None):
+    """Generate response using knowledge graph context
+    
+    Args:
+        n4j: Neo4j connection
+        gid: Graph ID
+        query: User query
+        client: Optional DedicatedKeyClient. If None, creates temporary one.
+    """
+    from dedicated_key_manager import create_dedicated_client
+    
+    # Create client if not provided (will be reused for both LLM calls)
+    if client is None:
+        client = create_dedicated_client(task_id=f"get_response_{gid[:8]}")
+    
     selfcont = ret_context(n4j, gid)
     linkcont = link_context(n4j, gid)
     user_one = "the question is: " + query + "the provided information is:" +  "".join(selfcont)
-    res = call_llm(sys_prompt_one,user_one)
+    res = call_llm(sys_prompt_one, user_one, client=client)
     user_two = "the question is: " + query + "the last response of it is:" +  res + "the references are: " +  "".join(linkcont)
-    res = call_llm(sys_prompt_two,user_two)
+    res = call_llm(sys_prompt_two, user_two, client=client)
     return res
 
 def link_context(n4j, gid):
