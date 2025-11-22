@@ -237,8 +237,14 @@ class DedicatedKeyClient:
                 except Exception as e:
                     error_str = str(e)
                     
-                    # 1. Rate limit - wait longer
-                    if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                    # 1. SUSPENDED KEY - Immediately rotate, don't retry
+                    if "403" in error_str and "PERMISSION_DENIED" in error_str and "suspended" in error_str.lower():
+                        logger.error(f"[CLIENT #{current_key_num}] KEY SUSPENDED! Rotating immediately...")
+                        # Break out of retry loop to trigger rotation
+                        break
+                    
+                    # 2. Rate limit - wait longer
+                    elif "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
                         wait_time = 10 + (attempt * 5)  # Exponential backoff: 10, 15, 20, 25, 30s
                         logger.warning(f"⚠️ [CLIENT #{current_key_num}] Rate limit hit. "
                                      f"Waiting {wait_time}s... (attempt {attempt + 1}/{max_retries})")
@@ -250,19 +256,19 @@ class DedicatedKeyClient:
                             break  # Exit retry loop, go to rotation
                         continue
                     
-                    # 2. Server errors
+                    # 3. Server errors
                     elif "500" in error_str or "503" in error_str or "INTERNAL" in error_str:
                         logger.warning(f"⚠️ [CLIENT #{current_key_num}] Server error. Retrying in 5s...")
                         time.sleep(5.0)
                         continue
                     
-                    # 3. Network errors
+                    # 4. Network errors
                     elif "disconnected" in error_str.lower() or "connection" in error_str.lower():
                         logger.warning(f"⚠️ [CLIENT #{current_key_num}] Network error. Retrying in 3s...")
                         time.sleep(3.0)
                         continue
                     
-                    # 4. Other errors - raise
+                    # 5. Other errors - raise
                     else:
                         logger.error(f"❌ [CLIENT #{current_key_num}] Unexpected error: {error_str}")
                         raise
