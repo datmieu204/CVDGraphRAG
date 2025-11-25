@@ -1,0 +1,49 @@
+{
+  "results": [
+    {
+      "question": "Causes of thickened gallbladder wall on ultrasound examination are all except: A. Postprandial state | B. Cholecystitis | C. Congestive cardiac failure | D. Kawasaki disease",
+      "answer": "The correct answer is **D. Kawasaki disease**.\n\nHere's why:\n\n*   **A. Postprandial state:** While the provided references do not directly mention the postprandial state in relation to gallbladder wall thickness, it is a known physiological response for the gallbladder wall to thicken slightly after eating as it releases bile.\n*   **B. Cholecystitis:** Cholecystitis, or inflammation of the gallbladder, is a common cause of thickened gallbladder walls on ultrasound.\n*   **C. Congestive cardiac failure (CHF):** Congestive heart failure can lead to fluid buildup in the body, which can affect various organs, including the gallbladder, potentially causing wall thickening [0][1][2][3][4][5][6][7][8][9][10][11][12][13][14].\n\n**D. Kawasaki disease** is a condition that primarily affects children and causes inflammation in blood vessels. The provided references do not contain any information linking Kawasaki disease to thickened gallbladder walls.",
+      "ground_truth": "Kawasaki disease || Ans: D (Kawasaki disease) Ref: Manual of Emergency Critical Care Ultrasound Vicke E Noble. 2nd ed. Pg 156Explanation:Kawasaki disease is associated with hydrops of gallbladder.Gallbladder Wall Thickening A gallbladder wall that is thickened is a sign of inflammation. This is a non-specific finding, and many other pathologic processes, as well as a postprandial gallbladder, can give you falsely elevated measurements.It is important to measure the wall of the anterior gallbladder surface because of the acoustic enhancement artifact mentioned.Because sound waves travel through a fluid-filled structure, no attenuation occurs. Thus, when those sound weaves hit the back of the gallbladder, they will be so strong that they will obscure an accurate picture of the wall thickness.For gallbladder wall thickness, greater than 3 mm is abnormal.Differential for Thickened Gallbladder WallPostprandialRenal failureAscitesHepatitisHypoalbuminemiaHIV/AIDSAdenomyomatosisMultiple myelomaCholecystitisCongestive heart failure",
+      "gid": "495faaa0-66a1-49fc-b24a-c6eeb80f4367",
+      "metrics": {
+        "answer_similarity": 0.8752976057169527,
+        "question_answer_relevance": 0.9307674090207582,
+        "rouge_1": 0.37323943661971826,
+        "rouge_2": 0.1276595744680851,
+        "rouge_l": 0.16901408450704225,
+        "bleu": 0.04306371056289301,
+        "overall_score": 0.5187998348609201
+      }
+    }
+  ],
+  "aggregate": {
+    "avg_answer_similarity": 0.8752976057169527,
+    "std_answer_similarity": 0.0,
+    "min_answer_similarity": 0.8752976057169527,
+    "max_answer_similarity": 0.8752976057169527,
+    "avg_question_answer_relevance": 0.9307674090207582,
+    "std_question_answer_relevance": 0.0,
+    "min_question_answer_relevance": 0.9307674090207582,
+    "max_question_answer_relevance": 0.9307674090207582,
+    "avg_rouge_1": 0.37323943661971826,
+    "std_rouge_1": 0.0,
+    "min_rouge_1": 0.37323943661971826,
+    "max_rouge_1": 0.37323943661971826,
+    "avg_rouge_2": 0.1276595744680851,
+    "std_rouge_2": 0.0,
+    "min_rouge_2": 0.1276595744680851,
+    "max_rouge_2": 0.1276595744680851,
+    "avg_rouge_l": 0.16901408450704225,
+    "std_rouge_l": 0.0,
+    "min_rouge_l": 0.16901408450704225,
+    "max_rouge_l": 0.16901408450704225,
+    "avg_bleu": 0.04306371056289301,
+    "std_bleu": 0.0,
+    "min_bleu": 0.04306371056289301,
+    "max_bleu": 0.04306371056289301,
+    "avg_overall_score": 0.5187998348609201,
+    "std_overall_score": 0.0,
+    "min_overall_score": 0.5187998348609201,
+    "max_overall_score": 0.5187998348609201
+  }
+}
