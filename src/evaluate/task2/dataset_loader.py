@@ -1,6 +1,6 @@
 """
 Dataset loader for Task 2 QnA evaluation
-Loads questions and ground truth answers from text files
+Loads questions and ground truth answers from 2 text files
 """
 
 import sys
@@ -107,8 +107,8 @@ def load_medgraph_qna_dataset() -> QnADataset:
         QnADataset with questions and ground truth answers
     """
     # Default paths relative to project root
-    questions_file = "/home/medgraph/qna/questions_en.txt"
-    answers_file = "/home/medgraph/qna/answers_en.txt"
+    questions_file = "/home/medgraph/qna/quang/questions.txt"
+    answers_file = "/home/medgraph/qna/quang/answers.txt"
     
     return QnADataset(questions_file, answers_file)
 

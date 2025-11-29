@@ -28,10 +28,10 @@ def main():
     
     # Dataset options
     parser.add_argument('--questions', type=str, 
-                       default='/home/medgraph/qna/questions_en.txt',
+                       default='/home/medgraph/qna/quang/questions.txt',
                        help='Questions file path')
     parser.add_argument('--answers', type=str,
-                       default='/home/medgraph/qna/answers_en.txt',
+                       default='/home/medgraph/qna/quang/answers.txt',
                        help='Ground truth answers file path')
     parser.add_argument('--limit', type=int, 
                        help='Limit number of questions to evaluate')

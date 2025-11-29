@@ -1,6 +1,14 @@
 """
 Task 2: Medical QnA Evaluation with Knowledge Graph + LLM
 Comprehensive metrics for medical question answering quality assessment
+1. Input: câu hỏi
+2. LLM tóm tắt
+3. Retrieval → GID
+4. Knowledge Graph context
+5. LLM answer
+6. LLM judge 7 metrics
+7. Tính average
+8. Xuất JSON
 """
 
 import os
@@ -30,29 +38,20 @@ class MedicalQAMetrics:
     correctness: float  # 0-1: medical accuracy
     citation_precision: float  # 0-1: accuracy of cited sources
     citation_recall: float  # 0-1: completeness of citations
-    understandability: float  # 0-1: clarity for non-experts
-    answer_consistency: float  # 0-1: logical consistency
-    faithfulness: float  # 0-1: grounding in KG/documents (anti-hallucination)
     
     def overall_score(self) -> float:
         """Weighted average of all metrics"""
         weights = {
-            'pertinence': 0.15,
-            'correctness': 0.25,  # Most important for medical
-            'citation_precision': 0.10,
-            'citation_recall': 0.10,
-            'understandability': 0.15,
-            'answer_consistency': 0.10,
-            'faithfulness': 0.15
+            'pertinence': 0.25,
+            'correctness': 0.40,  # Most important for medical
+            'citation_precision': 0.175,
+            'citation_recall': 0.175
         }
         return (
             self.pertinence * weights['pertinence'] +
             self.correctness * weights['correctness'] +
             self.citation_precision * weights['citation_precision'] +
-            self.citation_recall * weights['citation_recall'] +
-            self.understandability * weights['understandability'] +
-            self.answer_consistency * weights['answer_consistency'] +
-            self.faithfulness * weights['faithfulness']
+            self.citation_recall * weights['citation_recall']
         )
     
     def to_dict(self) -> Dict:
@@ -142,9 +141,9 @@ class MedicalQAEvaluator:
         summaries = process_chunks(question, client=self.client)
         summary = " ".join(summaries) if summaries else question
         
-        # Step 2: Retrieve relevant subgraph GID
+        # Step 2: Retrieve relevant subgraph GID (pass client)
         logger.info("  [2/3] Retrieving relevant knowledge graph...")
-        gid = seq_ret(self.n4j, summary)
+        gid = seq_ret(self.n4j, summary, client=self.client)
         
         if gid is None:
             logger.error("  ❌ No relevant knowledge graph found")
@@ -159,9 +158,9 @@ class MedicalQAEvaluator:
         kg_context = self.get_kg_context_for_evaluation(gid)
         logger.info(f"  ✅ Retrieved {kg_context['entity_count']} entities")
         
-        # Step 4: Generate answer using standard get_response
+        # Step 4: Generate answer using standard get_response (pass client)
         logger.info("  [4/4] Generating answer with get_response...")
-        answer = get_response(self.n4j, gid, question)
+        answer = get_response(self.n4j, gid, question, client=self.client)
         
         return answer, gid, kg_context
     
@@ -358,89 +357,6 @@ Provide ONLY a number between 0 and 1."""
         
         return precision, recall
     
-    def evaluate_understandability(self, answer: str) -> float:
-        """Evaluate clarity for non-experts (0-1)"""
-        prompt = f"""Evaluate how understandable this medical answer is for a non-expert on a scale of 0-1.
-
-Answer: {answer}
-
-Scoring guide:
-- 1.0: Clear, well-explained with simple language and examples
-- 0.7-0.9: Mostly clear but uses some unexplained medical terms
-- 0.4-0.6: Moderately understandable but quite technical
-- 0.1-0.3: Very technical, hard for non-experts
-- 0.0: Incomprehensible jargon
-
-Provide ONLY a number between 0 and 1."""
-        
-        try:
-            response = self.client.call_with_retry(prompt, model="models/gemini-2.5-flash-lite")
-            score = float(response.strip())
-            return max(0.0, min(1.0, score))
-        except:
-            return 0.5
-    
-    def evaluate_consistency(self, question: str, answer: str) -> float:
-        """Evaluate logical consistency within the answer (0-1)"""
-        prompt = f"""Evaluate the internal logical consistency of this answer on a scale of 0-1.
-
-Question: {question}
-
-Answer: {answer}
-
-Scoring guide:
-- 1.0: Perfectly consistent, no contradictions
-- 0.7-0.9: Mostly consistent with minor inconsistencies
-- 0.4-0.6: Some logical inconsistencies or contradictions
-- 0.1-0.3: Major contradictions
-- 0.0: Completely contradictory
-
-Provide ONLY a number between 0 and 1."""
-        
-        try:
-            response = self.client.call_with_retry(prompt, model="models/gemini-2.5-flash-lite")
-            score = float(response.strip())
-            return max(0.0, min(1.0, score))
-        except:
-            return 0.5
-    
-    def evaluate_faithfulness(self, answer: str, kg_context: Dict) -> float:
-        """Evaluate grounding in KG (anti-hallucination) (0-1)"""
-        entities_sample = kg_context.get('entities', [])[:15]
-        context_summary = kg_context.get('context_text', 'Context not available')
-        
-        entities_text = "\n".join([
-            f"- {e['entity']} ({e['type']}): {e.get('desc', 'N/A')}"
-            for e in entities_sample
-        ])
-        
-        prompt = f"""Evaluate how well this answer is grounded in the provided knowledge graph context (0-1).
-Check for hallucinations or unsupported claims.
-
-Answer: {answer}
-
-Knowledge Graph Context:
-{entities_text}
-
-Context Summary:
-{context_summary}
-
-Scoring guide:
-- 1.0: All claims supported by KG, no hallucinations
-- 0.7-0.9: Mostly grounded with minimal unsupported claims
-- 0.4-0.6: Some claims not in KG but reasonable
-- 0.1-0.3: Many unsupported or contradictory claims
-- 0.0: Complete hallucination, not based on KG
-
-Provide ONLY a number between 0 and 1."""
-        
-        try:
-            response = self.client.call_with_retry(prompt, model="models/gemini-2.5-flash-lite")
-            score = float(response.strip())
-            return max(0.0, min(1.0, score))
-        except:
-            return 0.5
-    
     def evaluate_answer(self, question: str, answer: str, gid: str, kg_context: Dict) -> MedicalQAMetrics:
         """
         Comprehensive evaluation of a medical QA answer
@@ -450,43 +366,28 @@ Provide ONLY a number between 0 and 1."""
         logger.info("="*80)
         
         # Evaluate each metric
-        logger.info("\n[1/7] Evaluating Pertinence...")
+        logger.info("\n[1/4] Evaluating Pertinence...")
         pertinence = self.evaluate_pertinence(question, answer)
         logger.info(f"  ✅ Pertinence: {pertinence:.3f}")
         
-        logger.info("\n[2/7] Evaluating Correctness...")
+        logger.info("\n[2/4] Evaluating Correctness...")
         correctness = self.evaluate_correctness(question, answer, kg_context)
         logger.info(f"  ✅ Correctness: {correctness:.3f}")
         
-        logger.info("\n[3/7] Evaluating Citations...")
+        logger.info("\n[3/4] Evaluating Citations...")
         citation_precision, citation_recall = self.evaluate_citations(answer, kg_context)
         logger.info(f"  ✅ Citation Precision: {citation_precision:.3f}")
         logger.info(f"  ✅ Citation Recall: {citation_recall:.3f}")
-        
-        logger.info("\n[4/7] Evaluating Understandability...")
-        understandability = self.evaluate_understandability(answer)
-        logger.info(f"  ✅ Understandability: {understandability:.3f}")
-        
-        logger.info("\n[5/7] Evaluating Consistency...")
-        consistency = self.evaluate_consistency(question, answer)
-        logger.info(f"  ✅ Answer Consistency: {consistency:.3f}")
-        
-        logger.info("\n[6/7] Evaluating Faithfulness...")
-        faithfulness = self.evaluate_faithfulness(answer, kg_context)
-        logger.info(f"  ✅ Faithfulness: {faithfulness:.3f}")
         
         # Create metrics object
         metrics = MedicalQAMetrics(
             pertinence=pertinence,
             correctness=correctness,
             citation_precision=citation_precision,
-            citation_recall=citation_recall,
-            understandability=understandability,
-            answer_consistency=consistency,
-            faithfulness=faithfulness
+            citation_recall=citation_recall
         )
         
-        logger.info("\n[7/7] Computing Overall Score...")
+        logger.info("\n[4/4] Computing Overall Score...")
         logger.info(f"  ✅ Overall Score: {metrics.overall_score():.3f}")
         
         return metrics

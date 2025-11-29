@@ -2,6 +2,11 @@
 """
 Quick evaluation script for medical QA system
 Tests with first question from the real dataset
+
+1. Load questions + answers
+2. Lấy từng câu, gọi evaluator pipeline để:
+3. Summarize → retrieve → get_response → evaluate 7 metrics
+4. Lưu kết quả từng câu + aggregate metrics → JSON
 """
 
 import sys
