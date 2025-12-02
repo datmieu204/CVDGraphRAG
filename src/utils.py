@@ -9,6 +9,10 @@ from transformers import AutoTokenizer, AutoModel
 import torch
 from google import genai
 
+from logger_ import get_logger
+
+logger = get_logger("utils", log_file="logs/utils.log")
+
 sys_prompt_one = """
 Please answer the question using insights supported by provided graph-based data relevant to medical information.
 """
@@ -22,7 +26,9 @@ _embedding_tokenizer = None
 _embedding_model = None
 
 def get_bge_m3_embedding(text):
-    """Get embeddings using HuggingFace bge-small-en-v1.5 model"""
+    """
+    Get embeddings using HuggingFace bge-small-en-v1.5 model
+    """
     global _embedding_tokenizer, _embedding_model
     
     if _embedding_tokenizer is None or _embedding_model is None:
@@ -48,7 +54,6 @@ def get_bge_m3_embedding(text):
     return embeddings[0].cpu().numpy().tolist()
 
 def get_embedding(text, mod="bge-small-en-v1.5"):
-    """Get embeddings using bge-small-en-v1.5 from HuggingFace"""
     return get_bge_m3_embedding(text)
 
 def fetch_texts(n4j):
@@ -66,9 +71,8 @@ def add_nodes_emb(n4j):
 
     for node in nodes:
         # Calculate embedding for each node's text
-        if node['id']:  # Ensure there is text to process
+        if node['id']:
             embedding = get_embedding(node['id'])
-            # Store embedding back in the node
             add_embeddings(n4j, node['id'], embedding)
 
 def add_ge_emb(graph_element):
@@ -96,7 +100,6 @@ def add_sum(n4j, content, gid, client=None):
     """
     from dedicated_key_manager import create_dedicated_client
     
-    # Create client if not provided
     if client is None:
         client = create_dedicated_client(task_id=f"add_sum_{gid[:8]}")
     
@@ -128,11 +131,9 @@ def call_llm(sys, user, client=None):
     """
     from dedicated_key_manager import create_dedicated_client
     
-    # Create client if not provided
     if client is None:
         client = create_dedicated_client(task_id="call_llm_standalone")
     
-    # Combine system and user prompts for Gemini
     full_prompt = f"{sys}\n\n{user}"
     
     return client.call_with_retry(
@@ -142,15 +143,12 @@ def call_llm(sys, user, client=None):
     )
 
 def find_index_of_largest(nums):
-    # Handle empty list
     if not nums:
-        print("⚠️ Warning: No ratings found. Database may be empty.")
+        print("Warning: No ratings found. Database may be empty.")
         return -1
     
-    # Sorting the list while keeping track of the original indexes
     sorted_with_index = sorted((num, index) for index, num in enumerate(nums))
     
-    # Extracting the original index of the largest element
     largest_original_index = sorted_with_index[-1][1]
     
     return largest_original_index
@@ -166,15 +164,45 @@ def get_response(n4j, gid, query, client=None):
     """
     from dedicated_key_manager import create_dedicated_client
     
-    # Create client if not provided (will be reused for both LLM calls)
     if client is None:
         client = create_dedicated_client(task_id=f"get_response_{gid[:8]}")
     
     selfcont = ret_context(n4j, gid)
     linkcont = link_context(n4j, gid)
-    user_one = "the question is: " + query + "the provided information is:" +  "".join(selfcont)
+    
+    logger.info(f"Self context: {len(selfcont)} items, ~{sum(len(s) for s in selfcont)} chars")
+    logger.info(f"Link context: {len(linkcont)} items, ~{sum(len(s) for s in linkcont)} chars")
+    
+    MAX_CONTEXT_ITEMS = 50
+    MAX_CONTEXT_CHARS = 3000
+    
+    if len(selfcont) > MAX_CONTEXT_ITEMS:
+        logger.warning(f"Truncating self context from {len(selfcont)} to {MAX_CONTEXT_ITEMS} items")
+        selfcont = selfcont[:MAX_CONTEXT_ITEMS]
+    
+    if len(linkcont) > MAX_CONTEXT_ITEMS:
+        logger.warning(f"Truncating link context from {len(linkcont)} to {MAX_CONTEXT_ITEMS} items")
+        linkcont = linkcont[:MAX_CONTEXT_ITEMS]
+    
+    selfcont_str = "\n".join(selfcont)
+    linkcont_str = "\n".join(linkcont)
+    
+    if len(selfcont_str) > MAX_CONTEXT_CHARS:
+        logger.warning(f"Truncating self context string from {len(selfcont_str)} to {MAX_CONTEXT_CHARS} chars")
+        selfcont_str = selfcont_str[:MAX_CONTEXT_CHARS] + "...(truncated)"
+    
+    if len(linkcont_str) > MAX_CONTEXT_CHARS:
+        logger.warning(f"Truncating link context string from {len(linkcont_str)} to {MAX_CONTEXT_CHARS} chars")
+        linkcont_str = linkcont_str[:MAX_CONTEXT_CHARS] + "...(truncated)"
+    
+    logger.info(f"Final context lengths - Self: {len(selfcont_str)} chars, Link: {len(linkcont_str)} chars")
+    
+    user_one = f"the question is: {query}\n\nthe provided information is:\n{selfcont_str}"
+    logger.info(f"Calling LLM (step 1) with prompt length: {len(user_one)} chars")
     res = call_llm(sys_prompt_one, user_one, client=client)
-    user_two = "the question is: " + query + "the last response of it is:" +  res + "the references are: " +  "".join(linkcont)
+    
+    user_two = f"the question is: {query}\n\nthe last response of it is:\n{res}\n\nthe references are:\n{linkcont_str}"
+    logger.info(f"Calling LLM (step 2) with prompt length: {len(user_two)} chars")
     res = call_llm(sys_prompt_two, user_two, client=client)
     return res
 
