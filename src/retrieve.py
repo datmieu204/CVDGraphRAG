@@ -18,7 +18,6 @@ def seq_ret(n4j, sumq, client=None):
         sumq: Query summary
         client: Optional DedicatedKeyClient. If None, creates temporary one.
     """
-    # Create client if not provided
     if client is None:
         client = create_dedicated_client(task_id="seq_ret_standalone")
     rating_list = []
@@ -30,10 +29,9 @@ def seq_ret(n4j, sumq, client=None):
         """
     res = n4j.query(sum_query)
     
-    # Check if database has any Summary nodes
     if not res:
-        logger.error("❌ Error: No Summary nodes found in Neo4j database.")
-        logger.info("💡 Please run with -construct_graph first to build the knowledge graph.")
+        logger.error("Error: No Summary nodes found in Neo4j database.")
+        logger.info("Please run with -construct_graph first to build the knowledge graph.")
         return None
     
     for r in res:
@@ -42,7 +40,6 @@ def seq_ret(n4j, sumq, client=None):
     
     for sk in sumk:
         sk = sk[0]
-        # Use dedicated client instead of call_llm
         user_prompt = "The two summaries for comparison are: \n Summary 1: " + sk + "\n Summary 2: " + sumq[0]
         full_prompt = f"{sys_p}\n\n{user_prompt}"
         rate = client.call_with_retry(full_prompt, model="models/gemini-2.5-flash-lite", max_retries=3)
@@ -62,9 +59,8 @@ def seq_ret(n4j, sumq, client=None):
 
     ind = find_index_of_largest(rating_list)
     
-    # Handle case when no valid index found
     if ind == -1:
-        logger.error("❌ Error: Could not find any valid ratings.")
+        logger.error("Error: Could not find any valid ratings.")
         return None
     
     gid = gids[ind]
