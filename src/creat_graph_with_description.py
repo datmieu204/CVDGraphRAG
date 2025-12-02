@@ -23,7 +23,8 @@ from dedicated_key_manager import create_dedicated_client
 
 # Import existing components
 from camel.loaders import UnstructuredIO
-from data_chunk import run_chunk
+# from data_chunk import run_chunk
+from chunking import chunk_document
 from utils import get_embedding, str_uuid, add_sum
 from logger_ import get_logger
 
@@ -54,17 +55,14 @@ async def extract_entities_with_description(content: str, client, entity_types=N
         relationships: [{'src': ..., 'tgt': ..., 'description': ..., 'strength': ...}, ...]
     """
     if entity_types is None:
-        # Default medical entity types
         entity_types = [
             "Disease", "Symptom", "Treatment", "Medication", "Test", 
             "Anatomy", "Procedure", "Condition", "Measurement", "Hormone",
             "Diagnostic_Criteria", "Clinical_Guideline", "Patient", "Doctor"
         ]
     
-    # Use nano_graphrag's entity_extraction prompt
     prompt_template = PROMPTS["entity_extraction"]
     
-    # Prepare parameters
     entity_types_str = ", ".join(entity_types)
     tuple_delimiter = "<|>"
     record_delimiter = "##"
@@ -83,14 +81,12 @@ async def extract_entities_with_description(content: str, client, entity_types=N
     logger.info(f"  [Entity Extraction] Extracting entities and relationships...")
     response = client.call_with_retry(prompt, model="models/gemini-2.5-flash-lite")
     
-    # Parse response
     entities = []
     relationships = []
     
     if not response:
         return entities, relationships
     
-    # Split records
     records = response.split(record_delimiter)
     
     for record in records:
@@ -132,7 +128,7 @@ async def extract_entities_with_description(content: str, client, entity_types=N
             if relationship['src'] and relationship['tgt']:
                 relationships.append(relationship)
 
-    logger.info(f"  ✅ Extracted {len(entities)} entities, {len(relationships)} relationships")
+    logger.info(f"Extracted {len(entities)} entities, {len(relationships)} relationships")
     return entities, relationships
 
 
@@ -149,7 +145,7 @@ def create_neo4j_nodes_and_relationships(n4j, entities: List[Dict], relationship
     """
     import gc
     
-    BATCH_SIZE = 32  # Process 32 entities per batch (smaller than UMLS due to longer TXT content)
+    BATCH_SIZE = 32
 
     logger.info(f"  [Neo4j] Starting to write {len(entities)} entities...")
 
@@ -199,14 +195,13 @@ def create_neo4j_nodes_and_relationships(n4j, entities: List[Dict], relationship
                 })
                 created_nodes += 1
             except Exception as e:
-                logger.warning(f"    ⚠️  Failed to create node: {entity_name} - {e}")
+                logger.warning(f"  Failed to create node: {entity_name} - {e}")
         
         # Force garbage collection after each batch
         gc.collect()
 
-    logger.info(f"  ✅ Entity node creation completed: {created_nodes}/{len(entities)}")
+    logger.info(f"Entity node creation completed: {created_nodes}/{len(entities)}")
 
-    # 2. Create relationships in batches
     RELATION_BATCH_SIZE = 32
     logger.info(f"  [Neo4j] Starting to create {len(relationships)} relationships...")
 
@@ -223,9 +218,8 @@ def create_neo4j_nodes_and_relationships(n4j, entities: List[Dict], relationship
         for rel in batch_relations:
             src = rel['src']
             tgt = rel['tgt']
-            rel_type = "RELATED_TO"  # Default relationship type
+            rel_type = "RELATED_TO"
             
-            # Infer relationship type from description
             description = rel.get('description', '').lower()
             if 'treat' in description or 'cure' in description:
                 rel_type = "TREATS"
@@ -236,7 +230,6 @@ def create_neo4j_nodes_and_relationships(n4j, entities: List[Dict], relationship
             elif 'symptom' in description or 'manifest' in description:
                 rel_type = "HAS_SYMPTOM"
             
-            # Create relationship Cypher query
             create_rel_query = """
             MATCH (a {id: $src, gid: $gid})
             MATCH (b {id: $tgt, gid: $gid})
@@ -255,18 +248,22 @@ def create_neo4j_nodes_and_relationships(n4j, entities: List[Dict], relationship
                 })
                 created_relations += 1
             except Exception as e:
-                logger.warning(f"    ⚠️  Failed to create relationship: {src} -> {tgt} - {e}")
+                logger.warning(f"  Failed to create relationship: {src} -> {tgt} - {e}")
         
-        # Force garbage collection after each batch
         gc.collect()
 
-    logger.info(f"  ✅ Relationship creation completed: {created_relations}/{len(relationships)}")
+    logger.info(f"Relationship creation completed: {created_relations}/{len(relationships)}")
 
 
 def creat_metagraph_with_description(args, content: str, gid: str, n4j):
     """
     Create knowledge graph using nano_graphrag's extraction logic (with description)
     But writes to Neo4j and supports three-layer architecture (gid)
+    
+    IMPROVEMENTS:
+    - Semantic chunking (embedding-based)
+    - NER-based filtering (skip chunks with low Bottom layer overlap)
+    - Incremental Middle→Bottom linking
     
     Args:
         args: Arguments
@@ -277,43 +274,82 @@ def creat_metagraph_with_description(args, content: str, gid: str, n4j):
     Returns:
         n4j: Updated Neo4j connection
     """
-    logger.info(f"\n{'='*60}")
     logger.info(f"[Graph Construction] Starting knowledge graph construction (GID: {gid[:8]}...)")
-    logger.info(f"{'='*60}")
-    
-    # Create dedicated client for this file/GID
-    # Each file gets its own API key to avoid rate limit conflicts
+
     client = create_dedicated_client(task_id=f"gid_{gid[:8]}")
     logger.info(f"[API Key] Using dedicated key #{client.key_index + 1} for this file")
 
-    # Instantiate components
     uio = UnstructuredIO()
     
-    # Whether to use fine-grained chunking
+    ner_extractor = None
+    if hasattr(args, 'bottom_filter') and args.bottom_filter:
+        logger.info("[NER] Initializing HeartExtractor for filtering...")
+        try:
+            from ner.heart_extractor import HeartExtractor
+            ner_extractor = HeartExtractor()
+            logger.info("NER model loaded successfully")
+        except Exception as e:
+            logger.warning(f"NER model failed to load: {e}")
+            logger.warning("  Falling back to no-filter mode")
+    
     if args.grained_chunk:
-        logger.info("[Chunking] Using fine-grained chunking...")
-        content_chunks = run_chunk(content, client)  # Pass client to run_chunk
+        logger.info("[Chunking] Using semantic chunking (embedding-based)...")
+        content_chunks = chunk_document(
+            content,
+            threshold=0.85,
+            max_chunk_sentences=15,
+            max_chunk_tokens=512,
+            log_stats=True
+        )
+        
+        # from data_chunk import run_chunk
+        # content_chunks = run_chunk(content, client)
     else:
         logger.info("[Chunking] Using full content...")
         content_chunks = [content]
     
-    # Process each chunk
+    total_chunks = len(content_chunks)
+    processed_chunks = 0
+    skipped_chunks = 0
+    
     all_entities = []
     all_relationships = []
     
     for idx, chunk in enumerate(content_chunks, 1):
-        logger.info(f"\n[Chunk {idx}/{len(content_chunks)}] Processing...")
+        logger.info(f"\n[Chunk {idx}/{total_chunks}] Processing...")
         
-        # Extract entities and relationships (async call)
-        # Pass client to extraction function
+        if ner_extractor is not None:
+            logger.info(f"  [NER Filter] Checking Bottom layer overlap...")
+            try:
+                from creat_graph import is_valid_entity, check_entities_in_bottom_layer
+                
+                extracted_ner = ner_extractor.extract_entities(chunk)
+                
+                min_threshold = getattr(args, 'min_overlap', 3)
+                relevant_count, matched_entities, total_entities = check_entities_in_bottom_layer(
+                    n4j, extracted_ner, gid, min_overlap=min_threshold
+                )
+                
+                if relevant_count < min_threshold:
+                    logger.info(f"SKIPPING: Only {relevant_count}/{total_entities} entities match Bottom layer (< {min_threshold})")
+                    logger.info(f"LLM calls saved: 2 (entity extraction + relationship extraction)")
+                    skipped_chunks += 1
+                    continue
+                else:
+                    logger.info(f"PROCESSING: {relevant_count}/{total_entities} entities match Bottom layer")
+            
+            except Exception as e:
+                logger.warning(f"NER filtering failed: {e}")
+ 
         entities, relationships = asyncio.run(
             extract_entities_with_description(chunk, client)
         )
         
         all_entities.extend(entities)
         all_relationships.extend(relationships)
-
-    logger.info(f"\n[Summary] Total extracted:")
+        processed_chunks += 1
+    
+    logger.info(f"\n[Extraction Summary] Total extracted:")
     logger.info(f"  - Entities: {len(all_entities)}")
     logger.info(f"  - Relationships: {len(all_relationships)}")
 
@@ -332,25 +368,23 @@ def creat_metagraph_with_description(args, content: str, gid: str, n4j):
             entity_dict[name] = entity
     
     merged_entities = list(entity_dict.values())
-    logger.info(f"  ✅ After merging: {len(merged_entities)} entities")
-    
-    # Write to Neo4j
+    logger.info(f"After merging: {len(merged_entities)} entities")
     logger.info(f"\n[Writing to Neo4j] Starting...")
     create_neo4j_nodes_and_relationships(n4j, merged_entities, all_relationships, gid)
     
-    # In-graph merge (if enabled)
+    logger.info(f"\n[Incremental Linking] Creating Middle→Bottom references...")
+    from smart_linking import link_middle_to_bottom_incremental
+    links_created = link_middle_to_bottom_incremental(n4j, merged_entities, gid)
+    logger.info(f"{links_created} IS_REFERENCE_OF links created")
+    
     if args.ingraphmerge:
         logger.info(f"\n[In-Graph Merge] Merging similar nodes...")
         from utils import merge_similar_nodes
         merge_similar_nodes(n4j, gid)
     
-    # Create Summary node (reuse the same client)
     logger.info(f"\n[Summary] Creating summary node...")
     add_sum(n4j, content, gid, client=client)
 
-    logger.info(f"\n{'='*60}")
     logger.info(f"[Graph Construction] Completed! (GID: {gid[:8]}...)")
-    logger.info(f"{'='*60}\n")
     
     return n4j
-
