@@ -1,0 +1,34 @@
+*.yml
+dataset/
+data/
+dataset_paper/
+dataset_test/
+test*/
+test_*
+.dockerignore
+app.sh
+temp/
+qna/
+output/
+my_output/
+
+### Python template
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+# Jupyter Notebook
+/.ipynb_checkpoints
+
+# ignore special files or folds
+/.DS_Store
+
+# virtual environment
+venv/
+*.env
+
+# Logs
+logs/
+*.log
+.hf_cache/
+.vscode/
+

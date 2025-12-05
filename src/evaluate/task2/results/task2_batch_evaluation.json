@@ -1,0 +1,329 @@
+{
+  "dataset_info": {
+    "questions_file": "/home/medgraph/qna/questions_en.txt",
+    "answers_file": "/home/medgraph/qna/answers_en.txt",
+    "total_questions": 41,
+    "evaluated_count": 15,
+    "start_index": 0
+  },
+  "results": [
+    {
+      "question": "EMPULSE Trial: In acute heart failure with concomitant acute kidney injury (AKI), does empagliflozin worsen renal function and electrolyte balance, leading to Major Adverse Cardiovascular Events (MACE)?",
+      "answer": "Error: Unable to generate answer",
+      "gid": "c7096119-9c69-401a-9736-65cfbc444a8d",
+      "ground_truth": "EMPULSE Trial: Acute Kidney Injury (AKI) is not a contraindication, but empagliflozin should not be initiated hastily in hemodynamically unstable patients. It should only be used when Blood Pressure (BP) is stable and eGFR (estimated Glomerular Filtration Rate) is >20 mL/min/1.73m².",
+      "metrics": {
+        "pertinence": 0.0,
+        "correctness": 0.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 1.0,
+        "answer_consistency": 1.0,
+        "faithfulness": 1.0,
+        "overall_score": 0.4
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "Heart Failure with mildly reduced/preserved Ejection Fraction (HFmrEF/HFpEF): What is the role of beta-blockers, given that classic studies were primarily conducted in Heart Failure with reduced Ejection Fraction (HFrEF)?",
+      "answer": "Based on the provided Medical Knowledge Graph Context, here is the role of beta-blockers in Heart Failure with mildly reduced/preserved Ejection Fraction (HFmrEF/HFpEF):\n\nThe context **does not explicitly define the role or efficacy of beta-blockers specifically for HFmrEF or HFpEF.**\n\nHowever, the context provides the following relevant information:\n\n1. **Primary Evidence Base:** The classic studies demonstrating the benefit of beta-blockers (specifically **Bisoprolol**, **Carvedilol**, and **Metoprolol succinate**) were conducted in patients with **Heart Failure with reduced Ejection Fraction (HFrEF)**. These studies showed that beta-blockers reduce **mortality** and **hospitalizations** in HFrEF.\n2. **Current Recommendations (HFrEF):** Beta-blockers are considered **Guideline-Directed Medical Therapy (GDMT)** for HFrEF, alongside **ACE inhibitors/ARBs/ARNI** and **MRAs**.\n3. **Missing Information (HFmrEF/HFpEF):** The context **does not contain any entities or relationships** that describe the outcomes (e.g., mortality, hospitalization reduction) or specific recommendations for using **Bisoprolol**, **Carvedilol**, or **Metoprolol succinate** in patients diagnosed with **HFmrEF** or **HFpEF**.\n\n**Conclusion:**\n\nWhile beta-blockers are foundational therapy for HFrEF, the provided knowledge graph context is **insufficient** to determine their specific role, efficacy, or recommendation status in the management of Heart Failure with mildly reduced Ejection Fraction (HFmrEF) or Heart Failure with preserved Ejection Fraction (HFpEF). The context only confirms that the established evidence base for these drugs stems from studies focused on HFrEF.",
+      "gid": "c7096119-9c69-401a-9736-65cfbc444a8d",
+      "ground_truth": "Beta-blockers improve prognosis in Heart Failure with reduced Ejection Fraction (HFrEF). There is no evidence for prognostic improvement in Heart Failure with mildly reduced or preserved Ejection Fraction (HFmrEF/HFpEF), unless there are other indications (e.g., hypertension, angina).",
+      "metrics": {
+        "pertinence": 1.0,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.5,
+        "answer_consistency": 1.0,
+        "faithfulness": 0.0,
+        "overall_score": 0.5750000000000001
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "HFrEF with low Blood Pressure (BP) and high heart rate: Should SGLT2 inhibitors (Sodium-glucose cotransporter-2 inhibitors) be prioritized, or should an attempt be made to use beta-blockers/ivabradine?",
+      "answer": "Based on the provided information, a definitive medical recommendation regarding the prioritization of SGLT2 inhibitors versus beta-blockers/ivabradine for a patient with HFrEF, low Blood Pressure (BP), and high heart rate **cannot be made**.\n\n### Insufficiency of Information\n\nThe **Medical Knowledge Graph Context** provided is empty.\n\n1.  **Missing Data:** There are no entities, relationships, or clinical trial data available within the context to assess:\n    *   The specific hemodynamic effects (impact on BP and heart rate) of SGLT2 inhibitors in this high-risk population.\n    *   The safety profile or contraindications for initiating beta-blockers or ivabradine in the setting of existing low BP.\n    *   Any established prioritization guidelines or treatment algorithms for HFrEF management when hypotension (low BP) is present.\n\n2.  **Conclusion:** Since the necessary medical knowledge graph context is absent, it is impossible to determine which therapeutic strategy (prioritizing SGLT2 inhibitors or attempting rate control with beta-blockers/ivabradine) is supported by the provided evidence.",
+      "gid": "c7096119-9c69-401a-9736-65cfbc444a8d",
+      "ground_truth": "Parallel combination: SGLT2 inhibitors (Sodium-glucose cotransporter-2 inhibitors) are safe (do not affect BP). Simultaneously, initiate a low-dose beta-blocker or ivabradine (which also do not significantly affect BP) if heart rate control is needed.",
+      "metrics": {
+        "pertinence": 1.0,
+        "correctness": 0.5,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.5,
+        "answer_consistency": 1.0,
+        "faithfulness": 1.0,
+        "overall_score": 0.6000000000000001
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "After incomplete coronary revascularization: What is the recommended duration for long-term beta-blocker therapy?",
+      "answer": "Based on the provided Medical Knowledge Graph Context, the information regarding the recommended duration for long-term beta-blocker therapy specifically after incomplete coronary revascularization is **insufficient**.\n\n### Detailed Analysis:\n\n1.  **Incomplete Information:** The knowledge graph does not contain a specific entity or relationship defining the recommended duration (e.g., 1 year, indefinitely) for **Beta-Blocker Therapy** in the context of **Incomplete Coronary Revascularization**.\n\n2.  **Relevant Contextual Information:**\n    *   The graph confirms that **Incomplete Coronary Revascularization** is a recognized clinical entity and is associated with an **Increased Risk of Adverse Events**.\n    *   The graph outlines general recommendations for **Beta-Blocker Therapy**, stating that it is recommended for specific patient groups, including **Patients with Reduced Ejection Fraction** and **Post-Myocardial Infarction Patients**.\n\n3.  **Conclusion:** While the context establishes the risk associated with incomplete revascularization and identifies patient groups who benefit from beta-blockers, the specific duration of therapy required for this particular clinical scenario is missing.",
+      "gid": "c7096119-9c69-401a-9736-65cfbc444a8d",
+      "ground_truth": "The duration of beta-blocker therapy is not affected by whether revascularization was complete or incomplete. Long-term use is recommended if the Left Ventricular Ejection Fraction (LVEF) is <40% or if the patient has a history of Myocardial Infarction (MI).",
+      "metrics": {
+        "pertinence": 1.0,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.5,
+        "answer_consistency": 1.0,
+        "faithfulness": 0.0,
+        "overall_score": 0.5750000000000001
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "In clinical practice, which patient population benefits most from the combination of bisoprolol and amlodipine?",
+      "answer": "Based on the provided Medical Knowledge Graph Context, the combination of **Bisoprolol** (a Beta-blocker) and **Amlodipine** (a Calcium channel blocker) benefits several patient populations, but is particularly advantageous for those with coexisting cardiovascular conditions.\n\nThe patient populations that benefit most from this combination therapy are:\n\n1.  **Patients with Hypertension (High Blood Pressure):** The combination is a primary treatment for **Hypertension**, leveraging the synergistic effect of two different classes of antihypertensive agents to achieve better blood pressure control.\n2.  **Patients with Coronary Artery Disease (CAD) and/or Chronic Stable Angina:** This combination is highly beneficial for individuals with underlying **Coronary Artery Disease (CAD)**, especially those experiencing **Chronic Stable Angina** (chest pain caused by reduced blood flow to the heart muscle).\n\n### Rationale for Benefit\n\nThe combination is effective because it addresses multiple pathophysiological mechanisms simultaneously:\n\n*   **Bisoprolol** (Beta-blocker): Provides rate control, reducing heart rate and myocardial oxygen demand, which is crucial for managing **Chronic Stable Angina**.\n*   **Amlodipine** (Calcium channel blocker): Causes vasodilation (widening of blood vessels) and lowers peripheral vascular resistance, effectively treating **Hypertension**.\n\nThe context notes that this combination is ideal for **Patients with coexisting conditions** who require both rate control and blood pressure lowering, offering enhanced efficacy (a **Synergistic effect**) and potentially leading to **Improved adherence** due to the availability of fixed-dose combinations.",
+      "gid": "c7096119-9c69-401a-9736-65cfbc444a8d",
+      "ground_truth": "Patients who benefit most from the bisoprolol + amlodipine combination are: those with grade 2 or higher hypertension accompanied by sympathetic overactivity/tachycardia, or hypertension with stable angina. Patients with hypertension and HFrEF can also use this combination.",
+      "metrics": {
+        "pertinence": 1.0,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.8,
+        "answer_consistency": 1.0,
+        "faithfulness": 0.0,
+        "overall_score": 0.62
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "The combination of a beta-blocker and a calcium channel blocker has benefits on three mechanisms of hypertension. Why did the ESC (European Society of Cardiology) 2013 guidelines not recommend this combination (indicated by a dashed line)?",
+      "answer": "Based on the provided Medical Knowledge Graph Context, the combination of a **Beta-blocker** and a **Calcium channel blocker** was not recommended by the **ESC 2013 Guidelines** (indicated by a **Dashed line**) due to significant safety concerns related to cardiac rhythm and conduction.\n\nWhile this combination addresses three key mechanisms of hypertension (Heart rate, Renin-angiotensin system, and Peripheral resistance), the primary reasons for the non-recommendation (Entity 5) are:\n\n1.  **Increased risk of bradycardia:** Bradycardia is an abnormally slow heart rate (typically below 60 beats per minute). Both beta-blockers and certain calcium channel blockers (specifically the non-dihydropyridine type, which are rate-limiting) slow the heart rate. Combining them creates an additive effect that can lead to dangerously low heart rates.\n2.  **Increased risk of heart block:** Heart block (or atrioventricular block) is a disruption in the electrical conduction system between the atria and the ventricles of the heart. The combined negative chronotropic effects of these two drug classes significantly increase the likelihood of impaired electrical conduction, which can be life-threatening.\n\nTherefore, despite the potential benefits in controlling blood pressure through multiple pathways, the severe risk profile associated with cardiac rhythm disturbances led the **ESC 2013 Guidelines** to advise against this specific drug combination.",
+      "gid": "3bcee099-bb36-4184-825d-581eee267b14",
+      "ground_truth": "The ESC/ESH (European Society of Cardiology/European Society of Hypertension) 2018 guidelines have been updated. They recommend beta-blockers as a combination therapy option in multiple steps of treatment when there is a specific indication (heart failure, angina, post-MI, rate control in atrial fibrillation).",
+      "metrics": {
+        "pertinence": 1.0,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.8,
+        "answer_consistency": 1.0,
+        "faithfulness": 0.0,
+        "overall_score": 0.62
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "Is it better to take three medications (ACEI + diuretic + calcium channel blocker) simultaneously in the morning, or to split them into two doses per day (when a triple combination pill is not available)?",
+      "answer": "Based solely on the provided Medical Knowledge Graph Context, the information is **insufficient** to determine whether it is better to take the three medications (ACEI + diuretic + calcium channel blocker) simultaneously in the morning or to split them into two doses per day.\n\n### Insufficient Information\n\nThe knowledge graph context is empty and contains no data regarding:\n\n1.  **Pharmacokinetics:** The specific half-lives ($T_{1/2}$) of the individual ACEI, diuretic, and calcium channel blocker are unknown. Long-acting medications are generally suitable for once-daily dosing, while short-acting medications often require twice-daily (BID) dosing to maintain therapeutic plasma concentrations and ensure 24-hour blood pressure (BP) control.\n2.  **Chronopharmacology:** There is no data on the efficacy of once-daily versus twice-daily dosing in maintaining adequate nocturnal BP dipping (the natural drop in BP during sleep), which is crucial for reducing cardiovascular risk.\n3.  **Adherence Data:** Clinical studies comparing patient adherence (compliance) between once-daily and twice-daily regimens for this specific triple combination are absent.\n\n### General Medical Considerations (Context-Free)\n\nWhile a definitive answer cannot be provided from the context, in clinical practice, the decision is typically guided by the following principles:\n\n*   **Adherence:** Once-daily dosing (simultaneous morning dose) is generally preferred as it improves patient adherence.\n*   **Efficacy:** If all three medications are long-acting formulations (designed to cover 24 hours), simultaneous morning dosing is often appropriate.\n*   **Nocturnal Control:** If the patient exhibits inadequate 24-hour BP control, particularly if the BP rises significantly overnight (non-dipping or reverse dipping pattern), splitting the dose (e.g., taking one or two components in the evening) is often necessary to ensure continuous coverage.",
+      "gid": "c7096119-9c69-401a-9736-65cfbc444a8d",
+      "ground_truth": "It is preferable to take the medications once daily in the morning if using drugs with a high trough-to-peak ratio (e.g., perindopril, amlodipine/nifedipine GITS, indapamide) to improve adherence.",
+      "metrics": {
+        "pertinence": 1.0,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.8,
+        "answer_consistency": 1.0,
+        "faithfulness": 1.0,
+        "overall_score": 0.77
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "HFrEF with normal BP and high heart rate (~90 bpm): What is the optimal strategy for optimizing beta-blocker and ivabradine therapy?",
+      "answer": "This clinical scenario involves a patient with HFrEF (Heart Failure with reduced Ejection Fraction) who has a high resting heart rate (HR $\\approx 90$ bpm) but is hemodynamically stable with normal blood pressure (BP).\n\nThe optimal strategy for optimizing therapy involves prioritizing the titration of the beta-blocker (BB) first, followed by the addition of Ivabradine if the heart rate remains elevated.\n\n### 1. Strategy for Beta-Blocker Optimization\n\nGiven that the patient has a high heart rate (90 bpm) and normal BP, the primary focus must be on maximizing the dose of the beta-blocker, as BBs are foundational Guideline-Directed Medical Therapy (GDMT) for HFrEF.\n\n*   **Titration Goal:** The BB should be titrated aggressively to reach the **target dose** or the **maximally tolerated dose**. The normal BP is a favorable condition, as it removes the primary constraint (`Limitation`: Hypotension) that often hinders BB titration.\n*   **Mechanism:** Beta-blockers reduce heart rate and improve symptoms (`HFrEF` $\\rightarrow$ `Beta-blockers (BBs)` $\\rightarrow$ `Target HR reduction, Symptom improvement`). Titrating the BB is the first step to achieve the desired HR reduction.\n\n### 2. Strategy for Ivabradine Initiation\n\nIvabradine should only be considered as an add-on therapy *after* the beta-blocker has been maximized.\n\n*   **Indication Criteria:** Ivabradine is indicated for patients with HFrEF who meet specific criteria, as outlined in the knowledge graph:\n    1.  LVEF $\\le 35\\%$ (This specific value is needed to confirm eligibility).\n    2.  Symptomatic status (implied in HFrEF management).\n    3.  Resting HR $\\ge 70$ bpm.\n    4.  Patient is already on the **maximally tolerated BB dose** (or BBs are contraindicated).\n\n*   **Optimization Step:** If, after reaching the maximally tolerated BB dose, the patient's HR remains $\\ge 70$ bpm, Ivabradine should be initiated. Ivabradine works via the If channel blocker `Mechanism` to further reduce the heart rate.\n\n### 3. Target Heart Rate\n\nThe ultimate goal of this combined optimization strategy (BB + Ivabradine) is to achieve a resting heart rate in the range of **50-60 bpm** (`Ivabradine` $\\rightarrow$ `Goal HR`).\n\n---\n\n### Summary of Optimal Strategy\n\n| Step | Action | Rationale (KG Citation) |\n| :--- | :--- | :--- |\n| **1. Maximize BB** | Titrate the beta-blocker dose upward until the **target dose** or the **maximally tolerated dose** is reached. | BBs are GDMT; high HR (90 bpm) and normal BP allow for aggressive titration (`BBs` $\\rightarrow$ `Goal`). |\n| **2. Assess HR** | Reassess the resting heart rate after BB optimization. | Determine if the patient still meets the criteria for Ivabradine. |\n| **3. Initiate Ivabradine** | If the HR remains $\\ge 70$ bpm (and LVEF $\\le 35\\%$), add Ivabradine. | Ivabradine is indicated only after maximal BB therapy (`Ivabradine` $\\rightarrow$ `Indication`). |\n| **4. Achieve Goal** | Adjust Ivabradine dosing to achieve a resting HR of **50-60 bpm**. | Target HR for optimal HFrEF management (`Ivabradine` $\\rightarrow$ `Goal HR`). |\n\n### Insufficient Information\n\nWhile the general strategy is clear, the following specific information is missing from the context, which is necessary to confirm the immediate initiation of Ivabradine:\n\n1.  **Current Beta-Blocker Dose:** It is unknown if the patient is currently on a sub-maximal or maximal dose.\n2.  **Left Ventricular Ejection Fraction (LVEF):** The LVEF must be $\\le 35\\%$ to meet the full indication criteria for Ivabradine.",
+      "gid": "3bcee099-bb36-4184-825d-581eee267b14",
+      "ground_truth": "The priority is to use all four first-line drug classes (ARNI, beta-blocker, MRA, SGLT2i). Start with a low dose of beta-blocker and titrate up. Ivabradine can be added after the beta-blocker has reached the target or maximum tolerated dose and the heart rate remains ≥70 bpm.",
+      "metrics": {
+        "pertinence": 1.0,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.5,
+        "answer_consistency": 1.0,
+        "faithfulness": 0.0,
+        "overall_score": 0.5750000000000001
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "Newly diagnosed Diabetes Mellitus (DM) on metformin + DPP4i (Dipeptidyl peptidase-4 inhibitors) with elevated liver enzymes (non-alcoholic): Is there evidence for Liraglutide, and at what level of enzyme elevation can it be used?",
+      "answer": "This answer is based strictly on the provided Medical Knowledge Graph Context.\n\n### Evidence for Liraglutide\n\nYes, there is evidence supporting the use of Liraglutide (a GLP-1 Receptor Agonist) in patients with Diabetes Mellitus and elevated liver enzymes, particularly when the elevation is non-alcoholic (suggesting Non-Alcoholic Fatty Liver Disease or NAFLD).\n\n1.  **Improvement of Liver Enzymes:** The knowledge graph explicitly states that **Liraglutide** **improves** **Liver enzymes** (specifically **ALT** and **AST**).\n2.  **NAFLD Benefit:** The class of medication, **GLP-1 RA** (which includes Liraglutide), is **associated with** **Reduction in liver fat content** and shows **Potential benefits for** **NAFLD** (Non-Alcoholic Fatty Liver Disease).\n\n### Level of Enzyme Elevation for Use\n\nThe knowledge graph provides guidance regarding hepatic impairment but does not specify numerical thresholds for enzyme elevation (e.g., multiples of the upper limit of normal, or specific bilirubin levels).\n\n*   **Usage Guidance:** **Liraglutide** **Can be used in** **Patients with mild to moderate hepatic impairment**.\n\n### Insufficient Information\n\nThe knowledge graph is **insufficient** to determine the exact level of enzyme elevation (ALT/AST values) at which Liraglutide can be used, as it does not define the specific biochemical criteria that differentiate \"mild,\" \"moderate,\" or \"severe\" **hepatic impairment**.",
+      "gid": "3bcee099-bb36-4184-825d-581eee267b14",
+      "ground_truth": "Liraglutide (a GLP-1 receptor agonist) should be used for individuals with high cardiovascular risk or chronic kidney disease, or those who need to lose weight, regardless of their HbA1c level. It can still be used if liver enzymes (ALT, AST) are elevated but not more than 3 times the upper limit of normal.",
+      "metrics": {
+        "pertinence": 1.0,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.8,
+        "answer_consistency": 1.0,
+        "faithfulness": 0.0,
+        "overall_score": 0.62
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "What precautions are necessary to avoid hypoglycemia when treating non-diabetic heart failure patients with empagliflozin?",
+      "answer": "Based on the provided Medical Knowledge Graph Context, the information necessary to determine the specific precautions required to avoid hypoglycemia when treating non-diabetic heart failure patients with empagliflozin is **insufficient**.\n\nThe knowledge graph context does not contain entities or relationships detailing:\n\n1.  The specific risk profile for hypoglycemia associated with empagliflozin (an SGLT2 inhibitor) in non-diabetic populations.\n2.  Recommended monitoring protocols (e.g., frequency of blood glucose checks) for non-diabetic patients initiated on this therapy.\n3.  Specific dose adjustments or titration schedules designed to mitigate hypoglycemia risk in this patient group.\n\nTherefore, a definitive answer regarding necessary precautions cannot be provided solely based on the context provided.\n\n***\n\n*Note on standard medical practice (for context, though not derived from the graph):* While SGLT2 inhibitors like empagliflozin carry a low intrinsic risk of hypoglycemia in non-diabetic patients, standard precautions typically involve patient education regarding symptoms of hypoglycemia and monitoring for signs of excessive glucose lowering, especially if the patient is frail or has poor oral intake.",
+      "gid": "c7096119-9c69-401a-9736-65cfbc444a8d",
+      "ground_truth": "Empagliflozin does not increase the risk of hypoglycemia in non-diabetic heart failure patients. The drug only needs to be temporarily stopped if the patient becomes seriously ill, is unable to eat or drink, or experiences vomiting or diarrhea causing dehydration.",
+      "metrics": {
+        "pertinence": 0.5,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.5,
+        "answer_consistency": 1.0,
+        "faithfulness": 1.0,
+        "overall_score": 0.65
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "In stabilized acute heart failure, what clinical characteristics can be used to assess if a patient is stable enough for the addition of dapagliflozin before hospital discharge?",
+      "answer": "Based on the provided Medical Knowledge Graph Context, the assessment for initiating **Dapagliflozin** (an SGLT2 inhibitor) before hospital discharge in patients with **Stabilized Acute Heart Failure (AHF)** relies on achieving **Clinical stability**.\n\nThe specific clinical characteristics used to define this stability and assess readiness for drug addition are:\n\n1.  **Absence of signs of congestion:** The patient must show resolution or significant improvement of fluid overload symptoms.\n2.  **Hemodynamic stability:** This is specifically defined by a **Systolic Blood Pressure (SBP) $\\geq 100 \\text{ mmHg}$**.\n3.  **Lack of need for intravenous (IV) support:** The patient must demonstrate:\n    *   **No need for intravenous (IV) diuretics.**\n    *   **No need for IV vasoactive agents** (medications used to affect blood vessel tone and blood pressure).\n\nThese criteria collectively define the **Clinical stability** required for the safe and timely initiation of **Dapagliflozin** prior to discharge.",
+      "gid": "c7096119-9c69-401a-9736-65cfbc444a8d",
+      "ground_truth": "Criteria for assessing stability to add an SGLT2i include: systolic BP ≥100 mmHg without a hypotensive episode in the last 6 hours, no increase in intravenous diuretic dose in the last 6 hours, no use of intravenous vasodilators in the last 6 hours, and no use of intravenous inotropes in the last 24 hours.",
+      "metrics": {
+        "pertinence": 1.0,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.6,
+        "answer_consistency": 1.0,
+        "faithfulness": 0.0,
+        "overall_score": 0.59
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "What biomarkers or clinical/paraclinical changes can be used to evaluate the efficacy of SGLT2i in the treatment of heart failure?",
+      "answer": "Based on the provided Medical Knowledge Graph Context, the efficacy of SGLT2 inhibitors (SGLT2i) in the treatment of heart failure (HF) can be evaluated using several biomarkers and clinical/paraclinical changes.\n\n### Biomarkers\n\nThe primary biomarkers identified for evaluating SGLT2i efficacy in HF are related to cardiac stress and renal function:\n\n1. **N-terminal pro-B-type natriuretic peptide (NT-proBNP):**\n    * SGLT2i treatment leads to a **reduction** in **NT-proBNP** levels.\n    * NT-proBNP is a key biomarker reflecting myocardial wall stress and is widely used for HF diagnosis and prognosis. A reduction indicates improved cardiac function and reduced volume overload.\n\n2. **High-sensitivity cardiac troponin T (hs-cTnT):**\n    * SGLT2i treatment leads to a **reduction** in **hs-cTnT** levels.\n    * hs-cTnT is a marker of myocardial injury. A reduction suggests decreased cardiac damage or stress.\n\n3. **Uric Acid:**\n    * SGLT2i treatment leads to a **reduction** in **Uric Acid** levels.\n    * While not exclusively a cardiac marker, elevated uric acid is associated with worse outcomes in HF. Its reduction may reflect improved systemic metabolic and renal function.\n\n4. **Estimated Glomerular Filtration Rate (eGFR):**\n    * SGLT2i treatment leads to an **initial dip** followed by **stabilization** of **eGFR**.\n    * eGFR is a measure of kidney function. This pattern is characteristic of SGLT2i's renoprotective effects, which are crucial in HF management due to the frequent coexistence of cardiorenal syndrome.\n\n### Clinical and Paraclinical Changes\n\nThe context also highlights changes in clinical status and functional capacity:\n\n1. **Heart Failure Hospitalizations:**\n    * SGLT2i treatment leads to a **reduction** in **Heart Failure Hospitalizations**.\n    * This is a critical clinical endpoint demonstrating improved disease management and reduced acute decompensation events.\n\n2. **Kansas City Cardiomyopathy Questionnaire (KCCQ) Score:**\n    * SGLT2i treatment leads to an **improvement** in the **KCCQ Score**.\n    * The KCCQ is a patient-reported outcome measure (PROM) assessing health status, symptoms, and quality of life specific to cardiomyopathy. An improvement signifies better functional status and well-being.\n\n3. **Body Weight:**\n    * SGLT2i treatment leads to a **reduction** in **Body Weight**.\n    * This reduction is often attributed to the diuretic and natriuretic effects of SGLT2i, leading to decreased fluid retention and volume overload, which is beneficial in HF.\n\n### Summary of Efficacy Evaluation Markers\n\n| Category | Entity (Biomarker/Change) | Direction of Change Indicating Efficacy |\n| :--- | :--- | :--- |\n| **Cardiac Stress** | NT-proBNP | Reduction |\n| **Myocardial Injury** | hs-cTnT | Reduction |\n| **Renal Function** | eGFR | Initial dip followed by stabilization |\n| **Metabolic/Systemic** | Uric Acid | Reduction |\n| **Clinical Outcome** | Heart Failure Hospitalizations | Reduction |\n| **Quality of Life** | KCCQ Score | Improvement |\n| **Volume Status** | Body Weight | Reduction |\n\n***\n\n### Insufficient Information\n\nThe provided context is comprehensive regarding key biomarkers and clinical endpoints. However, it **does not explicitly mention** other common paraclinical measures used in HF efficacy evaluation, such as:\n\n*   Changes in **Echocardiographic parameters** (e.g., Left Ventricular Ejection Fraction (LVEF), left ventricular volumes).\n*   Changes in **6-Minute Walk Test (6MWT)** distance (a measure of functional capacity).\n*   Specific details on **blood pressure** changes (though implied by volume reduction).",
+      "gid": "c7096119-9c69-401a-9736-65cfbc444a8d",
+      "ground_truth": "BNP (B-type Natriuretic Peptide) and NT-proBNP are useful for the diagnosis and prognosis of heart failure, but they are not routinely recommended for monitoring the therapeutic efficacy of heart failure treatment (including SGLT2i) due to inconsistent results from clinical trials.",
+      "metrics": {
+        "pertinence": 1.0,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.4,
+        "answer_consistency": 1.0,
+        "faithfulness": 0.0,
+        "overall_score": 0.56
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "Peripartum cardiomyopathy causing HFrEF with partial recovery: Is the chronic heart failure management similar to current protocols? Which drug classes are prioritized?",
+      "answer": "This medical answer is based exclusively on the provided knowledge graph context regarding the management of Peripartum Cardiomyopathy (PPCM) causing Heart Failure with Reduced Ejection Fraction (HFrEF).\n\n### Chronic Heart Failure Management Protocol\n\n**1. Similarity to Current Protocols:**\n\nYes, the chronic heart failure management for Peripartum Cardiomyopathy (PPCM) causing HFrEF follows the **same protocols** as management for HFrEF due to other etiologies.\n\nHFrEF is defined as a Left Ventricular Ejection Fraction (LVEF) of $\\leq 40\\%$. The goal of management is to implement Guideline-Directed Medical Therapy (GDMT) to reduce morbidity and mortality.\n\n**2. Prioritized Drug Classes (Foundational Therapy):**\n\nThe management prioritizes the use of the four foundational drug classes for HFrEF. These classes should be titrated to target doses as tolerated:\n\n| Drug Class | Specific Entities Cited | Rationale/Preference |\n| :--- | :--- | :--- |\n| **Angiotensin Modulation** | `Angiotensin Receptor-Neprilysin Inhibitors (ARNI)`, `Angiotensin-Converting Enzyme Inhibitors (ACEi)`, `Angiotensin Receptor Blockers (ARB)` | **ARNI** is generally preferred over ACEi or ARB. |\n| **Neurohormonal Blockade** | `Beta-blockers` | Essential for reducing sympathetic overdrive. |\n| **Mineralocorticoid Antagonism** | `Mineralocorticoid Receptor Antagonists (MRA)` | Used to block aldosterone effects. |\n| **Metabolic/Renal Modulation** | `Sodium-Glucose Cotransporter-2 Inhibitors (SGLT2i)` | Used for cardiorenal protection. |\n\n**3. Management Following Partial Recovery:**\n\nThe context addresses the scenario of recovery (LVEF $> 40\\%$). Even with partial recovery, the foundational drug therapy (GDMT) should generally be **continued indefinitely** due to the significant risk of relapse if medications are discontinued.\n\n**4. Insufficient Information:**\n\nThe provided context is sufficient to answer the questions regarding management similarity and prioritized drug classes. No critical information is missing regarding the standard chronic management approach.",
+      "gid": "c7096119-9c69-401a-9736-65cfbc444a8d",
+      "ground_truth": "Peripartum Cardiomyopathy: These drugs have not been studied in pregnant or breastfeeding women. Treatment consists of beta-blockers, diuretics, digoxin, hydralazine, and nitrates. If LVEF partially improves, treatment must continue. Re-evaluate 6 months postpartum. Subsequent pregnancies are discouraged.",
+      "metrics": {
+        "pertinence": 1.0,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.3,
+        "answer_consistency": 1.0,
+        "faithfulness": 0.0,
+        "overall_score": 0.545
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "Chronic Coronary Syndrome vs. Acute Coronary Syndrome (ACS): Is the loading dose of Plavix (Clopidogrel) different before Percutaneous Coronary Intervention (PCI)?",
+      "answer": "Based on the provided Medical Knowledge Graph Context, which is empty, there is **insufficient information** to answer the question regarding the difference in the loading dose of Plavix (Clopidogrel) before Percutaneous Coronary Intervention (PCI) for Chronic Coronary Syndrome (CCS) versus Acute Coronary Syndrome (ACS).\n\n### Insufficient Information and Missing Entities\n\nThe knowledge graph context does not contain any of the necessary entities or relationships required to determine the appropriate antiplatelet dosing strategy.\n\n**Missing Entities Include:**\n\n1.  **Pharmacological Agents:** Specific dosing information for **Clopidogrel** (Plavix), including standard **loading dose** amounts (e.g., 300 mg, 600 mg).\n2.  **Clinical Syndromes:** Definitions or treatment protocols for **Acute Coronary Syndrome (ACS)** (which includes ST-elevation myocardial infarction [STEMI] and non-ST-elevation ACS [NSTE-ACS]) and **Chronic Coronary Syndrome (CCS)**.\n3.  **Intervention Protocols:** Details regarding the timing and necessity of dual antiplatelet therapy (DAPT) before **Percutaneous Coronary Intervention (PCI)** (a procedure to open blocked coronary arteries).\n\nTherefore, a comparison of the loading dose differences between these two clinical scenarios cannot be made using the provided source material.",
+      "gid": "c7096119-9c69-401a-9736-65cfbc444a8d",
+      "ground_truth": "A loading dose is only required for emergency Percutaneous Coronary Intervention (PCI) in Acute Coronary Syndrome (ACS). In chronic coronary syndrome, a standard dose of 75 mg/day for 3-4 days before the procedure is sufficient. If immediate intervention is needed, a 600 mg loading dose should be given.",
+      "metrics": {
+        "pertinence": 0.9,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.5,
+        "answer_consistency": 1.0,
+        "faithfulness": 1.0,
+        "overall_score": 0.7100000000000001
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    },
+    {
+      "question": "Is the PLATO trial (ticagrelor vs. clopidogrel in ACS) still applicable today, especially for elderly patients, with newer stents, and high bleeding risk?",
+      "answer": "The PLATO trial's findings regarding the efficacy of **ticagrelor** versus **clopidogrel** in patients with **Acute Coronary Syndrome (ACS)** remain generally applicable, but its use requires careful consideration, particularly in subgroups with elevated bleeding risk.\n\n### 1. General Applicability of PLATO\n\nThe PLATO trial demonstrated that **ticagrelor** (a potent, reversible P2Y12 inhibitor) significantly reduced the **primary composite endpoint** (a combination of cardiovascular death, myocardial infarction [MI], and stroke) compared to **clopidogrel** in the overall **ACS** population.\n\n### 2. Applicability with Newer Stents\n\nThe benefit of **ticagrelor** over **clopidogrel** established in PLATO is generally considered applicable to modern **Drug-Eluting Stents (DES)**.\n\n### 3. Applicability in Elderly Patients and High Bleeding Risk (HBR)\n\nWhile the efficacy benefit of **ticagrelor** is recognized, the context highlights significant safety concerns that limit its straightforward applicability in high-risk groups:\n\n*   **High Bleeding Risk (HBR):** **Ticagrelor** is associated with an increased **bleeding risk** in patients classified as **HBR**.\n*   **Elderly Patients:** Specifically, **ticagrelor** is associated with increased **bleeding risk** in **elderly patients** (defined as age $\\ge$ 75).\n\nFurthermore, the PLATO trial itself noted that **ticagrelor** was associated with a higher rate of **non-CABG major bleeding** and **dyspnea** (shortness of breath) compared to **clopidogrel**.\n\n**Conclusion on Applicability:**\n\nThe efficacy findings of PLATO are still relevant, supporting **ticagrelor** as a superior P2Y12 inhibitor for reducing ischemic events in ACS. However, for **elderly patients** (age $\\ge$ 75) and those with **HBR**, the increased risk of **bleeding** associated with **ticagrelor** necessitates a careful risk-benefit assessment, potentially favoring alternative strategies or shorter durations of therapy not detailed in this context.",
+      "gid": "3bcee099-bb36-4184-825d-581eee267b14",
+      "ground_truth": "The PLATO (2009) trial remains a cornerstone of guidelines, but its application must be appropriate for the study population. Advances in stent technology and techniques may reduce the superiority of ticagrelor. Decisions should be based on real-world studies and consideration of side effects (bleeding, dyspnea).",
+      "metrics": {
+        "pertinence": 1.0,
+        "correctness": 1.0,
+        "citation_precision": 0.0,
+        "citation_recall": 0.0,
+        "understandability": 0.5,
+        "answer_consistency": 1.0,
+        "faithfulness": 0.0,
+        "overall_score": 0.5750000000000001
+      },
+      "kg_context_summary": {
+        "entity_count": 0,
+        "sample_entities": []
+      }
+    }
+  ],
+  "aggregate": {
+    "avg_pertinence": 0.8933333333333333,
+    "std_pertinence": 0.26948510575210316,
+    "avg_correctness": 0.9,
+    "std_correctness": 0.27080128015453203,
+    "avg_citation_precision": 0.0,
+    "std_citation_precision": 0.0,
+    "avg_citation_recall": 0.0,
+    "std_citation_recall": 0.0,
+    "avg_understandability": 0.6,
+    "std_understandability": 0.18618986725025255,
+    "avg_answer_consistency": 1.0,
+    "std_answer_consistency": 0.0,
+    "avg_faithfulness": 0.3333333333333333,
+    "std_faithfulness": 0.47140452079103173,
+    "avg_overall_score": 0.5990000000000001,
+    "std_overall_score": 0.0782772849128873
+  }
+}
