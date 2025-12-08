@@ -33,7 +33,7 @@ logger = get_logger("semantic_eval", log_file="logs/evaluate/semantic_eval.log")
 class SemanticMetrics:
     """Enhanced semantic metrics with BGE + ROUGE + BLEU"""
     answer_similarity: float  # 0-1: BGE similarity between predicted & ground truth
-    question_answer_relevance: float  # 0-1: BGE similarity between question & answer
+    question_answer_relevance: float  # 0-1: BGE similarity between question & answer & context
     rouge_1: float  # 0-1: ROUGE-1 F1 score
     rouge_2: float  # 0-1: ROUGE-2 F1 score
     rouge_l: float  # 0-1: ROUGE-L F1 score
@@ -43,7 +43,7 @@ class SemanticMetrics:
         """Weighted average: BGE (40%) + ROUGE (30%) + BLEU (20%) + Q-A Relevance (10%)"""
         avg_rouge = (self.rouge_1 + self.rouge_2 + self.rouge_l) / 3.0
         return (
-            0.4 * self.answer_similarity + 
+            0.4 * ( self.answer_similarity + self.question_answer_relevance ) + 
             0.3 * avg_rouge + 
             0.2 * self.bleu + 
             0.1 * self.question_answer_relevance
