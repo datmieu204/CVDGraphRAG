@@ -224,9 +224,9 @@ class DedicatedKeyClient:
                 except Exception as e:
                     error_str = str(e)
                     
-                    if "PERMISSION_DENIED" in error_str and "CONSUMER_SUSPENDED" in error_str:
-                        logger.error(f"[CLIENT #{current_key_num}] KEY SUSPENDED! Rotating immediately...")
-                        logger.error(f"Suspended key error: {error_str[:200]}...")
+                    if "PERMISSION_DENIED" in error_str and ("CONSUMER_SUSPENDED" in error_str or "leaked" in error_str.lower()):
+                        logger.error(f"[CLIENT #{current_key_num}] KEY INVALID (suspended/leaked)! Rotating immediately...")
+                        logger.error(f"Permission denied error: {error_str[:300]}...")
                         break  # Exit retry loop immediately, go to rotation
                     
                     elif "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
