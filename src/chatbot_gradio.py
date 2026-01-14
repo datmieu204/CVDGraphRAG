@@ -111,12 +111,12 @@ def create_interface():
     }
     """
     
-    with gr.Blocks(css=custom_css, title="Medical Knowledge Graph Chatbot") as demo:
+    with gr.Blocks(css=custom_css, title="Heart/Cardiovascular Failure Medical Knowledge Graph Chatbot") as demo:
         gr.Markdown(
             """
-            # Medical Knowledge Graph Chatbot
+            # Heart/Cardiovascular Failure Medical Knowledge Graph Chatbot
             
-            Ask questions about medical reports and conditions.
+            Ask questions multiple choices about heart/cardiovascular failure medical reports and conditions.
             """
         )
         
@@ -126,7 +126,7 @@ def create_interface():
                     height=500,
                     label="Conversation",
                     show_label=True,
-                    avatar_images=(None, "🤖")
+                    avatar_images=(None, "/home/medgraph/src/images.jpg")
                 )
                 
                 with gr.Row():
